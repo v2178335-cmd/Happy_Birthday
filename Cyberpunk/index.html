@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk</title>
+    <link rel="stylesheet" href="style.css">
+	<link rel="icon" type="image/ico" href="icons/favicon.ico">
+</head>
+<body>
+	<div id="preloader">
+		<div class="loader-content">
+			<div class="loader-glitch" data-text="ИНИЦИАЛИЗАЦИЯ...">ИНИЦИАЛИЗАЦИЯ...</div>
+			<div class="bar-container">
+				<div class="bar-fill"></div>
+			</div>
+			<div class="status-text">ПОДКЛЮЧЕНИЕ К ПОДСЕТИ: <span id="load-percent">0%</span></div>
+		</div>
+	</div>
+    <!-- 1. Экран выбора пути -->
+    <div class="start-screen">
+        <h1 class="glitch" data-text="ВЫБЕРИ ПУТЬ">ВЫБЕРИ ПУТЬ   </h1>
+        <div class="path-selection">
+            <button class="path-btn" data-path="nomad">
+                <img src="icons/nomad.png"> <span>КОЧЕВНИК</span>
+            </button>
+            <button class="path-btn" data-path="street">
+                <img src="icons/street.png"> <span>ДИТЯ УЛИЦ</span>
+            </button>
+            <button class="path-btn" data-path="corp">
+                <img src="icons/corp.png"> <span>КОРПОРАТ</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. Интерфейс мессенджера -->
+    <div id="messenger" class="hidden">
+        <div class="messenger-header">
+            <div class="contact-info">
+                <img src="icons/icon_message.png" class="contact-chip">
+                <span id="contact-name">Загрузка...</span>
+            </div>
+            <div class="header-line"></div>
+        </div>
+        <div id="chat-box" class="chat-container"></div>
+        <div id="choices-area" class="choices-container"></div>
+    </div>
+
+	<!-- 3. Финальное желтое окно поздравления -->
+	<div id="congrats-window" class="hidden">
+		<div class="terminal-container">
+			<!-- Твоя иконка -->
+			<div class="terminal-header">
+				<img src="icons/jack.png" class="congrats-icon">
+				<span class="system-status">Джеки Уэллс</span>
+			</div>
+			
+			<div class="terminal-content">
+				<div id="typewriter-text"></div> 
+				<!-- Кнопка перезагрузки, чтобы можно было посмотреть другие пути -->
+				<button class="cyber-btn" onclick="location.reload()" style="margin-top: 20px;">ЗАКРЫТЬ</button>
+			</div>
+		</div>
+	</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
