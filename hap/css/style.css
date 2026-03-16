@@ -317,11 +317,32 @@
       padding: 20px;
       overflow-y: auto;
   }
-
-  /* Адаптивность для мобилок (Альбомная ориентация) */
+  
+  /* Адаптивность для телефонов в альбомном режиме */
   @media screen and (max-height: 500px) and (orientation: landscape) {
-      .book { width: 300px; height: 200px; transform: scale(0.8); }
-      .page { width: 150px; height: 200px; }
-      .content-display { width: 50vw; min-height: 80px; padding: 10px; }
-      .content-display p { font-size: 16px !important; }
+      .book { 
+          width: 70vh; /* Книга стала шире и выше, привязана к высоте экрана */
+          height: 50vh; 
+          transform: translateY(0); 
+          margin-top: 50px;
+      }
+      .page { 
+          width: 35vh; 
+          height: 50vh; 
+      }
+      .content-display { 
+          width: 90vw; 
+          max-width: 500px; 
+          top: 5px; 
+          min-height: 40px; 
+          padding: 8px; 
+      }
+      .content-display p { font-size: 14px !important; }
+      
+      /* Карточки для мобилки */
+      .photo { 
+          width: 18vh; /* Размер карточек тоже зависит от высоты экрана */
+          height: 18vh; 
+          border-radius: 15px; 
+      }
   }

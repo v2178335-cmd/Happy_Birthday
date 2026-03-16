@@ -302,10 +302,18 @@ function createHeartPhoto(idx, total, url) {
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
     
-    // Математическая формула сердца
     const t = (idx / total) * 2 * Math.PI;
-    const scale = Math.min(window.innerWidth, window.innerHeight) / 35; // Масштаб сердца
     
+    // --- УМНЫЙ РАСЧЕТ МАСШТАБА ---
+    // Формула сердца дает примерно 32 единицы в ширину и 30 в высоту.
+    // Мы берем 80% от меньшей стороны экрана и делим на 32, чтобы найти идеальный scaleBase.
+    const padding = 0.8; // Коэффициент заполнения (80% экрана)
+    const maxWidth = window.innerWidth * padding;
+    const maxHeight = window.innerHeight * padding;
+    
+    // Вычисляем максимально возможный масштаб, чтобы не вылезти ни по ширине, ни по высоте
+    const scaleBase = Math.min(maxWidth / 32, maxHeight / 30);
+
     const x = 16 * Math.pow(Math.sin(t), 3);
     const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
@@ -313,13 +321,20 @@ function createHeartPhoto(idx, total, url) {
     photo.style.left = centerX + 'px';
     photo.style.top = centerY + 'px';
 
-    // Анимация разлета
+    // Для мобилок делаем сами карточки чуть меньше, чтобы они не перекрывали друг друга слишком сильно
+    if (window.innerHeight < 500) {
+        photo.style.width = "18vh";
+        photo.style.height = "18vh";
+    }
+
     requestAnimationFrame(() => {
         setTimeout(() => {
             photo.style.opacity = '1';
-            photo.style.transform = `translate(-50%, -50%) scale(1) rotate(${Math.random() * 10 - 5}deg)`;
-            photo.style.left = (centerX + x * scale) + 'px';
-            photo.style.top = (centerY + y * scale) + 'px';
+            // Добавляем легкий случайный поворот каждой карточке для эффекта "разбросанных фото"
+            const randomRotate = Math.random() * 10 - 5;
+            photo.style.transform = `translate(-50%, -50%) scale(1) rotate(${randomRotate}deg)`;
+            photo.style.left = (centerX + x * scaleBase) + 'px';
+            photo.style.top = (centerY + y * scaleBase) + 'px';
         }, 50);
     });
 }
