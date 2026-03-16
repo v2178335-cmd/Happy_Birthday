@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy Birthday! 🎁</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Шрифты для красоты -->
+    <link href="https://fonts.googleapis.com/css?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+	<!-- Экран с просьбой перевернуть телефон -->
+	<div id="orientation-lock">
+		<div class="phone-icon">
+			<!-- Убедись, что картинка лежит в папке image под этим именем -->
+			<img src="image/rotate.png" alt="Rotate" style="width: 100px;">
+		</div>
+		<p>Пожалуйста, переверните устройство<br>для просмотра поздравления</p>
+	</div>
+
+    <!-- Канвас для матрицы -->
+    <canvas id="matrix-rain"></canvas>
+    
+    <!-- Основной канвас для анимации текста (S.Shape) -->
+    <canvas class="canvas"></canvas>
+
+    <!-- Контейнер с книгой -->
+    <div class="book-container">
+        <div class="book" id="book"></div>
+    </div>
+
+    <!-- Текст поздравления -->
+    <div class="content-display" id="contentDisplay">
+        <p id="contentText"></p>
+    </div>
+
+    <!-- Кнопка музыки -->
+    <button class="music-control" id="musicControl">▶</button>
+
+    <!-- Аудио плеер -->
+    <audio id="birthdayAudio" loop>
+        <!-- ЗАМЕНИ music.mp3 НА СВОЙ ФАЙЛ -->
+        <!--<source src="music/music.mp3" type="audio/mpeg">-->
+    </audio>
+
+    <!-- Скрипт -->
+    <script src="jscp/script.js"></script>
+</body>
+</html>
