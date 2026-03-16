@@ -304,37 +304,46 @@ function createHeartPhoto(idx, total, url) {
     
     const t = (idx / total) * 2 * Math.PI;
     
-    // --- НОВАЯ ЛОГИКА МАСШТАБА ---
-    let padding = 0.7; // Оставляем 30% свободного места по краям
-    
-    // В альбомном режиме телефона места по вертикали ОЧЕНЬ мало, 
-    // поэтому еще сильнее уменьшаем коэффициент
-    if (window.innerHeight < 500) padding = 0.55; 
+    // Определяем, телефон ли это в горизонтальном режиме
+    const isMobileLandscape = window.innerHeight < 500;
 
+    // --- НАСТРОЙКИ МАСШТАБА ---
+    let padding = isMobileLandscape ? 0.45 : 0.7; 
     const maxWidth = window.innerWidth * padding;
     const maxHeight = window.innerHeight * padding;
     
-    // Формула сердца требует запаса. Делим доступное место на размер формулы (32x30)
-    const scaleBase = Math.min(maxWidth / 32, maxHeight / 30);
+    // Базовый масштаб по высоте (самое узкое место)
+    let scaleBase = maxHeight / 30;
 
+    // Математическая формула сердца
     const x = 16 * Math.pow(Math.sin(t), 3);
-    const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+    let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-    // Все карточки сначала в центре и маленькие
+    // МОДИФИКАЦИЯ ДЛЯ МОБИЛОК:
+    if (isMobileLandscape) {
+        y = y * 0.8; // Сплющиваем сердце по вертикали на 20%, чтобы влезло
+        scaleBase = maxHeight / 22; // Немного увеличиваем общий размер после сплющивания
+    }
+
     photo.style.left = centerX + 'px';
     photo.style.top = centerY + 'px';
     photo.style.transform = 'translate(-50%, -50%) scale(0)';
-    photo.style.zIndex = 300 + idx; // Чтобы каждая следующая была чуть выше предыдущей
+    photo.style.zIndex = 300 + idx;
 
-    // Запускаем анимацию разлета
     requestAnimationFrame(() => {
         setTimeout(() => {
             photo.style.opacity = '1';
-            const randomRotate = Math.random() * 10 - 5; // Случайный наклон
+            const randomRotate = Math.random() * 10 - 5;
+            
+            // Финальные координаты
+            const finalX = centerX + x * scaleBase;
+            // Сдвигаем всё сердце чуть ниже на мобилках, чтобы не перекрывало текст сверху
+            const verticalOffset = isMobileLandscape ? window.innerHeight * 0.12 : 0;
+            const finalY = centerY + (y * scaleBase) + verticalOffset;
+
             photo.style.transform = `translate(-50%, -50%) scale(1) rotate(${randomRotate}deg)`;
-            photo.style.left = (centerX + x * scaleBase) + 'px';
-            photo.style.top = (centerY + (y * scaleBase) + (window.innerHeight * 0.05)) + 'px'; 
-            // Добавил небольшое смещение вниз (+innerHeight*0.05), чтобы сердце не упиралось в верхнюю панель браузера
+            photo.style.left = finalX + 'px';
+            photo.style.top = finalY + 'px';
         }, 50);
     });
 }

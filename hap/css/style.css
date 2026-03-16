@@ -339,10 +339,10 @@
       
       /* Карточки сердца на мобилке делаем МЕНЬШЕ */
       .photo { 
-          width: 13vh; 
-          height: 13vh; 
-          border-radius: 12px;
-          border: 3px solid white; /* Чуть тоньше рамка */
-          box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+          width: 11vh; /* Еще чуть меньше */
+          height: 11vh; 
+          border-radius: 10px;
+          border: 2px solid white;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       }
   }
