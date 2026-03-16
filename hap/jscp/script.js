@@ -58,10 +58,15 @@ S.Color = function (r, g, b, a) { this.r = r; this.g = g; this.b = b; this.a = a
 S.Color.prototype.render = function () { return 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + this.a + ')'; };
 
 S.Dot = function (x, y) {
-    this.p = new S.Point({ x: x, y: y, z: 3, a: 1, h: 0 }); // z: 3 — оптимальный радиус точки
+    // Измени z здесь (это начальный размер)
+    this.p = new S.Point({ x: x, y: y, z: 5, a: 1, h: 0 }); 
+    
     const rgb = hexToRgb(CONFIG.sequenceColor);
     this.c = new S.Color(rgb.r, rgb.g, rgb.b, 1);
-    this.t = new S.Point({ x: x, y: y, z: 3, a: 1, h: 0 });
+    
+    // И измени z здесь (это размер, к которому точка стремится)
+    this.t = new S.Point({ x: x, y: y, z: 5, a: 1, h: 0 }); 
+    
     this.q = []; this.e = 0.11; this.s = true;
 };
 
