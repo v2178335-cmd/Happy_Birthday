@@ -304,37 +304,37 @@ function createHeartPhoto(idx, total, url) {
     
     const t = (idx / total) * 2 * Math.PI;
     
-    // --- УМНЫЙ РАСЧЕТ МАСШТАБА ---
-    // Формула сердца дает примерно 32 единицы в ширину и 30 в высоту.
-    // Мы берем 80% от меньшей стороны экрана и делим на 32, чтобы найти идеальный scaleBase.
-    const padding = 0.8; // Коэффициент заполнения (80% экрана)
+    // --- НОВАЯ ЛОГИКА МАСШТАБА ---
+    let padding = 0.7; // Оставляем 30% свободного места по краям
+    
+    // В альбомном режиме телефона места по вертикали ОЧЕНЬ мало, 
+    // поэтому еще сильнее уменьшаем коэффициент
+    if (window.innerHeight < 500) padding = 0.55; 
+
     const maxWidth = window.innerWidth * padding;
     const maxHeight = window.innerHeight * padding;
     
-    // Вычисляем максимально возможный масштаб, чтобы не вылезти ни по ширине, ни по высоте
+    // Формула сердца требует запаса. Делим доступное место на размер формулы (32x30)
     const scaleBase = Math.min(maxWidth / 32, maxHeight / 30);
 
     const x = 16 * Math.pow(Math.sin(t), 3);
     const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
 
-    // Начальная позиция (центр)
+    // Все карточки сначала в центре и маленькие
     photo.style.left = centerX + 'px';
     photo.style.top = centerY + 'px';
+    photo.style.transform = 'translate(-50%, -50%) scale(0)';
+    photo.style.zIndex = 300 + idx; // Чтобы каждая следующая была чуть выше предыдущей
 
-    // Для мобилок делаем сами карточки чуть меньше, чтобы они не перекрывали друг друга слишком сильно
-    if (window.innerHeight < 500) {
-        photo.style.width = "18vh";
-        photo.style.height = "18vh";
-    }
-
+    // Запускаем анимацию разлета
     requestAnimationFrame(() => {
         setTimeout(() => {
             photo.style.opacity = '1';
-            // Добавляем легкий случайный поворот каждой карточке для эффекта "разбросанных фото"
-            const randomRotate = Math.random() * 10 - 5;
+            const randomRotate = Math.random() * 10 - 5; // Случайный наклон
             photo.style.transform = `translate(-50%, -50%) scale(1) rotate(${randomRotate}deg)`;
             photo.style.left = (centerX + x * scaleBase) + 'px';
-            photo.style.top = (centerY + y * scaleBase) + 'px';
+            photo.style.top = (centerY + (y * scaleBase) + (window.innerHeight * 0.05)) + 'px'; 
+            // Добавил небольшое смещение вниз (+innerHeight*0.05), чтобы сердце не упиралось в верхнюю панель браузера
         }, 50);
     });
 }
