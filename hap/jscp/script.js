@@ -222,12 +222,12 @@ function finalPhotoHeartEffect() {
 function createHeartPhoto(idx, total, url) {
     const photo = document.createElement('img'); photo.src = url; photo.className = 'photo'; document.body.appendChild(photo);
     const t = (idx / total) * 2 * Math.PI;
-    const isMobile = window.innerHeight < 500;
-    let scale = Math.min(window.innerWidth, window.innerHeight) / 35;
+    const isMobile = window.innerHeight < 200;
+    let scale = Math.min(window.innerWidth, window.innerHeight) / 30;
     let x = 16 * Math.pow(Math.sin(t), 3);
     let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
     
-    if (isMobile) { y *= 0.8; scale = window.innerHeight / 25; } // Сплющиваем для мобилок
+    if (isMobile) { y *= 0.8; scale = window.innerHeight / 35; } // Сплющиваем для мобилок
 
     photo.style.left = '50%'; photo.style.top = '50%';
     requestAnimationFrame(() => setTimeout(() => {
