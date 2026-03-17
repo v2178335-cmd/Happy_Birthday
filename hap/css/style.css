@@ -37,7 +37,7 @@
   }
 
   .photo {
-      position: fixed; width: 120px; height: 120px; border-radius: 30px; /* Скругление */
+      position: fixed; width: 120px; height: 120px; border-radius: 12px; /* Скругление */
       object-fit: cover; border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       z-index: 300; transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       opacity: 0; transform: translate(-50%, -50%) scale(0);

@@ -1,3 +1,4 @@
+// ================= НАСТРОЙКИ (РЕДАКТИРУЙ ЗДЕСЬ) =================
 const CONFIG = {
     matrixText: "HAPPYBIRTHDAY",
     matrixColor1: "#ff69b4",
@@ -5,6 +6,9 @@ const CONFIG = {
     matrixFontSize: 30,
     sequence: "3|2|1|С ДНЁМ|РОЖДЕНИЯ|АНИТА|❤|#gift|",
     sequenceColor: "#ff69b4",
+    particleSize: 5, // Размер точки (z)
+    particleGap: 10, // Плотность сетки
+
     pages: [
         { image: "image/cover.jpg", content: "" }, 
         { image: "image/photo1.jpg", content: "С Днем Рождения! 🎉" },
@@ -43,12 +47,12 @@ S.Drawing = (function () {
         drawCircle: function (p, c) { 
             context.fillStyle = c.render(); 
             context.beginPath(); 
-            // Добавляем эффект легкого свечения
             context.shadowBlur = 4;
             context.shadowColor = c.render();
             context.arc(p.x, p.y, p.z, 0, 2 * Math.PI, true); 
             context.fill(); 
-            context.shadowBlur = 0; },
+            context.shadowBlur = 0; 
+        },
         loop: function (fn) { if (typeof fn === 'function') renderFn = fn; this.clearFrame(); if (renderFn) renderFn(); requestFrame.call(window, () => this.loop()); }
     };
 }());
@@ -58,15 +62,10 @@ S.Color = function (r, g, b, a) { this.r = r; this.g = g; this.b = b; this.a = a
 S.Color.prototype.render = function () { return 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + this.a + ')'; };
 
 S.Dot = function (x, y) {
-    // Измени z здесь (это начальный размер)
-    this.p = new S.Point({ x: x, y: y, z: 5, a: 1, h: 0 }); 
-    
+    this.p = new S.Point({ x: x, y: y, z: CONFIG.particleSize, a: 1, h: 0 }); 
     const rgb = hexToRgb(CONFIG.sequenceColor);
     this.c = new S.Color(rgb.r, rgb.g, rgb.b, 1);
-    
-    // И измени z здесь (это размер, к которому точка стремится)
-    this.t = new S.Point({ x: x, y: y, z: 5, a: 1, h: 0 }); 
-    
+    this.t = new S.Point({ x: x, y: y, z: CONFIG.particleSize, a: 1, h: 0 }); 
     this.q = []; this.e = 0.11; this.s = true;
 };
 
@@ -86,39 +85,24 @@ S.Dot.prototype = {
 };
 
 S.ShapeBuilder = (function () {
-    var shapeCanvas = document.createElement('canvas'),
-        shapeContext = shapeCanvas.getContext('2d', { willReadFrequently: true });
-
+    var shapeCanvas = document.createElement('canvas'), shapeContext = shapeCanvas.getContext('2d', { willReadFrequently: true });
     return {
         letter: function (l) {
-            // Шаг сетки (чем больше число, тем реже точки)
-            var gap = 10; 
+            var gap = CONFIG.particleGap; 
             var width = Math.floor(window.innerWidth / gap) * gap;
             var height = Math.floor(window.innerHeight / gap) * gap;
-
-            shapeCanvas.width = width;
-            shapeCanvas.height = height;
-
-            var fontSize = 500;
-            shapeContext.font = 'bold ' + fontSize + 'px Arial';
-            var s = Math.min(fontSize, (width / shapeContext.measureText(l).width) * 0.8 * fontSize, (height / fontSize) * 0.8 * fontSize);
+            shapeCanvas.width = width; shapeCanvas.height = height;
+            shapeContext.font = 'bold 500px Arial';
+            var s = Math.min(500, (width / shapeContext.measureText(l).width) * 0.8 * 500, (height / 500) * 0.8 * 500);
             shapeContext.font = 'bold ' + s + 'px Arial';
-            shapeContext.textAlign = 'center';
-            shapeContext.textBaseline = 'middle';
-            
+            shapeContext.textAlign = 'center'; shapeContext.textBaseline = 'middle';
             shapeContext.clearRect(0, 0, width, height);
             shapeContext.fillText(l, width / 2, height / 2);
-
-            var pixels = shapeContext.getImageData(0, 0, width, height).data;
-            var dots = [];
-
-            // ДВОЙНОЙ ЦИКЛ для создания сетки точек
+            var pixels = shapeContext.getImageData(0, 0, width, height).data, dots = [];
             for (var y = 0; y < height; y += gap) {
                 for (var x = 0; x < width; x += gap) {
                     var index = (x + y * width) * 4;
-                    if (pixels[index + 3] > 0) {
-                        dots.push(new S.Point({ x: x, y: y }));
-                    }
+                    if (pixels[index + 3] > 0) { dots.push(new S.Point({ x: x, y: y })); }
                 }
             }
             return { dots: dots };
@@ -127,13 +111,20 @@ S.ShapeBuilder = (function () {
 }());
 
 S.Shape = (function () {
-    var dots = [], width = 0, height = 0;
+    var dots = [], width = 0, height = 0, cx = 0, cy = 0;
+    function compensate() { var a = S.Drawing.getArea(); cx = a.w / 2 - width / 2; cy = a.h / 2 - height / 2; }
     return {
         switchShape: function (n) {
             var a = S.Drawing.getArea();
             if (n.dots.length > dots.length) { for (var d = dots.length; d < n.dots.length; d++) dots.push(new S.Dot(a.w / 2, a.h / 2)); }
-            for (var d = 0; d < n.dots.length; d++) { dots[d].s = true; dots[d].t.x = n.dots[d].x; dots[d].t.y = n.dots[d].y; dots[d].t.a = 1; }
-            for (var d = n.dots.length; d < dots.length; d++) { dots[d].s = false; dots[d].t.a = 0; }
+            var d = 0;
+            while (n.dots.length > 0) {
+                var i = Math.floor(Math.random() * n.dots.length);
+                dots[d].s = true; dots[d].t.x = n.dots[i].x + cx; dots[d].t.y = n.dots[i].y + cy;
+                dots[d].t.a = 1; dots[d].t.z = CONFIG.particleSize;
+                n.dots = n.dots.slice(0, i).concat(n.dots.slice(i + 1)); d++;
+            }
+            for (var i = d; i < dots.length; i++) { if (dots[i].s) { dots[i].s = false; dots[i].t.a = 0; } }
         },
         render: function () { for (var d = 0; d < dots.length; d++) dots[d].render(); }
     };
@@ -169,12 +160,13 @@ function initMatrixRain() {
 }
 
 function showGiftAndBook() {
+    if (matrixInterval) clearInterval(matrixInterval);
     if (matrixCanvas) matrixCanvas.style.display = 'none';
     if (document.querySelector('.canvas')) document.querySelector('.canvas').style.display = 'none';
     const bookCont = document.querySelector('.book-container');
     if (bookCont) {
         bookCont.style.display = 'block'; document.getElementById('book').style.display = 'block';
-        setTimeout(() => { bookCont.classList.add('show'); showSpreadText(0); }, 100);
+        setTimeout(() => { bookCont.classList.add('show'); showSpreadText(0); startCelebration(); }, 100);
     }
 }
 
@@ -202,11 +194,17 @@ function showSpreadText(sheetIndex) {
     const leftText = CONFIG.pages[sheetIndex * 2 - 1]?.content || "";
     const rightText = CONFIG.pages[sheetIndex * 2]?.content || "";
     const fullText = (sheetIndex === 0) ? (CONFIG.pages[0].content || "") : (leftText + (leftText && rightText ? "\n" : "") + rightText);
-
     if (fullText.trim() !== "") {
         contentDisplay.classList.add('show'); contentText.innerText = ""; let charIndex = 0;
         typeWriterInterval = setInterval(() => { if (charIndex < fullText.length) { contentText.innerText += fullText.charAt(charIndex); charIndex++; } else clearInterval(typeWriterInterval); }, 50);
     } else contentDisplay.classList.remove('show');
+}
+
+function startCelebration() { for(let i=0; i<15; i++) setTimeout(spawnHeart, i * 400); }
+function spawnHeart() {
+    const heart = document.createElement('div'); heart.className = 'heart'; heart.innerHTML = '❤️';
+    heart.style.left = Math.random() * 100 + 'vw'; heart.style.bottom = "0px";
+    document.body.appendChild(heart); setTimeout(() => heart.remove(), 4000);
 }
 
 function finalPhotoHeartEffect() {
@@ -214,7 +212,7 @@ function finalPhotoHeartEffect() {
     setTimeout(() => {
         document.querySelector('.book-container').style.display = 'none';
         const photoUrls = CONFIG.pages.map(p => p.image).filter(img => img !== "");
-        const total = 18;
+        const total = 13;
         for (let i = 0; i < total; i++) setTimeout(() => createHeartPhoto(i, total, photoUrls[i % photoUrls.length]), i * 150);
     }, 1000);
 }
@@ -223,7 +221,7 @@ function createHeartPhoto(idx, total, url) {
     const photo = document.createElement('img'); photo.src = url; photo.className = 'photo'; document.body.appendChild(photo);
     const t = (idx / total) * 2 * Math.PI;
     const isMobile = window.innerHeight < 200;
-    let scale = Math.min(window.innerWidth, window.innerHeight) / 30;
+    let scale = Math.min(window.innerWidth, window.innerHeight) / 45;
     let x = 16 * Math.pow(Math.sin(t), 3);
     let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
     
@@ -232,21 +230,30 @@ function createHeartPhoto(idx, total, url) {
     photo.style.left = '50%'; photo.style.top = '50%';
     requestAnimationFrame(() => setTimeout(() => {
         photo.style.opacity = '1'; photo.style.transform = `translate(-50%, -50%) scale(1) rotate(${Math.random()*10-5}deg)`;
+		const verticalShift = isMobile ? -40 : -20;
         photo.style.left = (window.innerWidth/2 + x * scale) + 'px';
         photo.style.top = (window.innerHeight/2 + y * scale + (isMobile ? 20 : 0)) + 'px';
     }, 50));
 }
 
+function spawnFirework() {
+    const container = document.createElement('div'); container.className = 'firework-container';
+    container.style.left = Math.random() * 80 + 10 + 'vw'; container.style.top = Math.random() * 50 + 10 + 'vh';
+    for(let i=0; i<10; i++) { 
+        const fw = document.createElement('div'); fw.className = 'firework'; 
+        fw.style.transform = `rotate(${i * 36}deg)`; container.appendChild(fw); 
+    }
+    document.body.appendChild(container); setTimeout(() => container.remove(), 1000);
+}
+
 function checkOrientation() {
     const lock = document.getElementById('orientation-lock');
     if (window.innerHeight > window.innerWidth) { lock.style.display = 'flex'; } 
-    else { lock.style.display = 'none'; initMatrixRain(); }
+    else { lock.style.display = 'none'; if(!matrixInterval) initMatrixRain(); }
 }
 
 function hexToRgb(hex) {
-    var r = parseInt(hex.slice(1, 3), 16);
-    var g = parseInt(hex.slice(3, 5), 16);
-    var b = parseInt(hex.slice(5, 7), 16);
+    var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     return { r, g, b };
 }
 
