@@ -1,11 +1,11 @@
 // ================= НАСТРОЙКИ (РЕДАКТИРУЙ ЗДЕСЬ) =================
 const CONFIG = {
     matrixText: "HAPPYBIRTHDAY",
-    matrixColor1: "#ff69b4",
-    matrixColor2: "#00ffff",
+    matrixColor1: "#CF1077",
+    matrixColor2: "#973E6B",
     matrixFontSize: 30,
     sequence: "3|2|1|С ДНЁМ|РОЖДЕНИЯ|АНИТА|❤|#gift|",
-    sequenceColor: "#ff69b4",
+    sequenceColor: "#E2539B",
     particleSize: 5, // Размер точки (z)
     particleGap: 10, // Плотность сетки
 
