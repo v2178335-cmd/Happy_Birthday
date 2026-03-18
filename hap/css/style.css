@@ -8,7 +8,7 @@
   }
 
   #matrix-rain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-  .canvas { position: absolute; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+  .canvas { position: absolute; width: 100%; height: 100%; z-index: 2; pointer-events: none; transition: opacity 1s ease; }
 
   body { display: flex; justify-content: center; align-items: center; height: 100vh; }
 
@@ -37,7 +37,7 @@
   }
 
   .photo {
-      position: fixed; width: 120px; height: 120px; border-radius: 12px; /* Скругление */
+      position: fixed; width: 120px; height: 120px; border-radius: 14px; /* Скругление */
       object-fit: cover; border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
       z-index: 300; transition: all 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       opacity: 0; transform: translate(-50%, -50%) scale(0);
@@ -53,5 +53,5 @@
       .page { width: 42.5vh; height: 60vh; }
       .content-display { width: 80vw; padding: 10px; min-height: 50px; }
       .content-display p { font-size: 16px !important; }
-      .photo { width: 15vh; height: 15vh; border-radius: 20px; }
+      .photo { width: 12vh; height: 12vh; border-radius: 10px; }
   }

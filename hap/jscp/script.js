@@ -143,18 +143,48 @@ S.UI = (function () {
 
 // --- МАТРИЦА, КНИГА, СЕРДЦЕ ---
 function initMatrixRain() {
-    if (!matrixCanvas) return;
-    matrixCanvas.width = window.innerWidth; matrixCanvas.height = window.innerHeight;
-    const fontSize = CONFIG.matrixFontSize; const columns = Math.floor(matrixCanvas.width / fontSize); const drops = Array(columns).fill(1);
+    if (!matrixCanvas || !matrixCtx) return;
+    matrixCanvas.width = window.innerWidth; 
+    matrixCanvas.height = window.innerHeight;
+    
+    const fontSize = CONFIG.matrixFontSize;
+    const columns = Math.floor(matrixCanvas.width / fontSize);
+    const drops = Array(columns).fill(1);
+    
+    // Превращаем строку в массив: ['H', 'A', 'P', 'P', 'Y'...]
+    const chars = CONFIG.matrixText.split("");
+    
+    // Создаем массив индексов, чтобы каждая колонка знала, какую букву слова сейчас рисовать
+    const charIndexes = Array(columns).fill(0);
+    
     if (matrixInterval) clearInterval(matrixInterval);
+    
     matrixInterval = setInterval(() => {
-        matrixCtx.fillStyle = "rgba(0, 0, 0, 0.05)"; matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-        matrixCtx.font = fontSize + "px monospace";
+        // Делаем фон чуть более прозрачным (0.1 вместо 0.05), чтобы шлейф был короче и текст читался лучше
+        matrixCtx.fillStyle = "rgba(0, 0, 0, 0.1)";
+        matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+        
+        matrixCtx.font = "bold " + fontSize + "px monospace";
+        
         for (let i = 0; i < drops.length; i++) {
-            const text = CONFIG.matrixText[Math.floor(Math.random() * CONFIG.matrixText.length)];
+            // Берем букву по порядку из нашего слова
+            const text = chars[charIndexes[i]];
+            
             matrixCtx.fillStyle = (i % 2 === 0) ? CONFIG.matrixColor1 : CONFIG.matrixColor2;
             matrixCtx.fillText(text, i * fontSize, drops[i] * fontSize);
-            if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0; drops[i]++;
+            
+            // Если струя дождя ушла за экран
+            if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            
+            drops[i]++;
+            
+            // Переходим к следующей букве слова для следующего кадра в этой колонке
+            charIndexes[i]++;
+            if (charIndexes[i] >= chars.length) {
+                charIndexes[i] = 0; // Если слово кончилось, начинаем сначала (H -> A -> P...)
+            }
         }
     }, 50);
 }
@@ -208,32 +238,75 @@ function spawnHeart() {
 }
 
 function finalPhotoHeartEffect() {
-    document.querySelector('.book-container').classList.remove('show'); contentDisplay.classList.remove('show');
+    document.querySelector('.book-container').classList.remove('show'); 
+    contentDisplay.classList.remove('show');
+    
     setTimeout(() => {
         document.querySelector('.book-container').style.display = 'none';
+        
+        // Получаем список твоих фото
         const photoUrls = CONFIG.pages.map(p => p.image).filter(img => img !== "");
-        const total = 13;
-        for (let i = 0; i < total; i++) setTimeout(() => createHeartPhoto(i, total, photoUrls[i % photoUrls.length]), i * 150);
+        
+        // --- НАСТРОЙКА КОЛИЧЕСТВА КАРТОЧЕК ---
+        const total = 16; // Сколько ВСЕГО карточек будет в сердце (картинки будут повторяться)
+        
+        for (let i = 0; i < total; i++) {
+            setTimeout(() => {
+                // Берем картинку по кругу (используем остаток от деления %)
+                const imgUrl = photoUrls[i % photoUrls.length];
+                createHeartPhoto(i, total, imgUrl);
+            }, i * 150);
+        }
+        
+        // Запуск фейерверков
+        setInterval(spawnFirework, 2000);
     }, 1000);
 }
 
 function createHeartPhoto(idx, total, url) {
-    const photo = document.createElement('img'); photo.src = url; photo.className = 'photo'; document.body.appendChild(photo);
-    const t = (idx / total) * 2 * Math.PI;
-    const isMobile = window.innerHeight < 200;
-    let scale = Math.min(window.innerWidth, window.innerHeight) / 45;
-    let x = 16 * Math.pow(Math.sin(t), 3);
-    let y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-    
-    if (isMobile) { y *= 0.8; scale = window.innerHeight / 35; } // Сплющиваем для мобилок
+    const photo = document.createElement('img');
+    photo.src = url;
+    photo.className = 'photo';
+    document.body.appendChild(photo);
 
-    photo.style.left = '50%'; photo.style.top = '50%';
-    requestAnimationFrame(() => setTimeout(() => {
-        photo.style.opacity = '1'; photo.style.transform = `translate(-50%, -50%) scale(1) rotate(${Math.random()*10-5}deg)`;
-		const verticalShift = isMobile ? -40 : -20;
-        photo.style.left = (window.innerWidth/2 + x * scale) + 'px';
-        photo.style.top = (window.innerHeight/2 + y * scale + (isMobile ? 20 : 0)) + 'px';
-    }, 50));
+    const t = (idx / total) * 2 * Math.PI;
+
+    // --- АВТОМАТИЧЕСКИЙ РАСЧЕТ МАСШТАБА ---
+    const padding = 0.8; 
+    const availableWidth = window.innerWidth * padding;
+    const availableHeight = window.innerHeight * padding;
+
+    // Идеальный масштаб для любого экрана
+    const scale = Math.min(availableWidth / 32, availableHeight / 30);
+
+    const x = 16 * Math.pow(Math.sin(t), 3);
+    const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+
+    // Поднимаем сердце выше (особенно на мобилках)
+    const isMobile = window.innerHeight < 500;
+    const verticalNudge = isMobile ? -30 : -20; 
+
+    photo.style.left = centerX + 'px';
+    photo.style.top = centerY + 'px';
+    photo.style.transform = 'translate(-50%, -50%) scale(0)';
+    photo.style.zIndex = 300 + idx;
+
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            photo.style.opacity = '1';
+            const randomRotate = Math.random() * 12 - 6;
+            
+            const finalX = centerX + x * scale;
+            const finalY = centerY + (y * scale) + verticalNudge;
+
+            photo.style.transform = `translate(-50%, -50%) scale(1) rotate(${randomRotate}deg)`;
+            photo.style.left = finalX + 'px';
+            photo.style.top = finalY + 'px';
+        }, 50);
+    });
 }
 
 function spawnFirework() {
@@ -246,20 +319,64 @@ function spawnFirework() {
     document.body.appendChild(container); setTimeout(() => container.remove(), 1000);
 }
 
-function checkOrientation() {
-    const lock = document.getElementById('orientation-lock');
-    if (window.innerHeight > window.innerWidth) { lock.style.display = 'flex'; } 
-    else { lock.style.display = 'none'; if(!matrixInterval) initMatrixRain(); }
-}
 
 function hexToRgb(hex) {
     var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     return { r, g, b };
 }
 
-document.addEventListener('DOMContentLoaded', () => { initMatrixRain(); createPages(); S.init(); checkOrientation(); });
+// Переменная, чтобы скрипт не запускался повторно
+let hasStarted = false;
+
+// Функция запуска всего поздравления
+function startApp() {
+    if (hasStarted) return; // Если уже запущено, ничего не делаем
+    
+    initMatrixRain(); 
+    createPages(); 
+    S.init(); 
+    hasStarted = true;
+    console.log("App Started in Landscape");
+}
+
+function checkOrientation() {
+    const lock = document.getElementById('orientation-lock');
+    
+    // Если ширина меньше высоты (портретный режим)
+    if (window.innerHeight > window.innerWidth) {
+        lock.style.display = 'flex';
+    } 
+    // Если ширина больше высоты (горизонтальный режим)
+    else {
+        lock.style.display = 'none';
+        
+        // ЗАПУСК: Если мы еще не стартовали, запускаем всё именно сейчас
+        if (!hasStarted) {
+            startApp();
+        } else {
+            // Если уже запущено, просто обновляем размер дождя
+            if (typeof initMatrixRain === 'function') initMatrixRain();
+        }
+    }
+}
+
+// При загрузке страницы проверяем ориентацию
+document.addEventListener('DOMContentLoaded', () => {
+    // Не запускаем старт здесь напрямую!
+    // Просто проверяем ориентацию, она сама решит, когда запустить startApp
+    checkOrientation();
+});
+
+// Слушаем изменение размера экрана (поворот)
 window.addEventListener('resize', checkOrientation);
 
+// Музыка (остается без изменений)
 const musicBtn = document.getElementById('musicControl');
 const audio = document.getElementById('birthdayAudio');
-musicBtn.addEventListener('click', () => { if (audio.paused) { audio.play(); musicBtn.innerText = "⏸"; } else { audio.pause(); musicBtn.innerText = "▶"; } });
+if(musicBtn && audio) {
+    musicBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (audio.paused) { audio.play(); musicBtn.innerHTML = "⏸"; }
+        else { audio.pause(); musicBtn.innerHTML = "▶"; }
+    });
+}
