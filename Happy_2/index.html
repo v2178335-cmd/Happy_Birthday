@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Выбор Вселенной</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Montserrat:wght@600&display=swap');
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: #050505;
+            color: white;
+            font-family: 'Montserrat', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            color: #888;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        /* Сетка 2 на 2 */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 15px;
+            width: 90%;
+            max-width: 380px;
+            aspect-ratio: 1 / 1;
+        }
+
+        .game-btn {
+            text-decoration: none;
+            border: 2px solid #222;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #111;
+            transition: 0.3s;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        /* Иконки */
+        .icon {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .label {
+            font-size: 0.65rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+            color: #aaa;
+            text-transform: uppercase;
+        }
+
+        /* Цветовые стили для каждой игры при нажатии */
+        .cyber { border-color: #fcee0a; }
+        .cyber:active { background: #fcee0a; color: #000; box-shadow: 0 0 25px #fcee0a; }
+        .cyber:active .label { color: #000; }
+
+        .rdr2 { border-color: #8b0000; }
+        .rdr2:active { background: #8b0000; box-shadow: 0 0 25px #8b0000; }
+        .rdr2:active .label { color: #fff; }
+
+        .witcher { border-color: #c0c0c0; }
+        .witcher:active { background: #c0c0c0; color: #000; box-shadow: 0 0 25px #c0c0c0; }
+        .witcher:active .label { color: #000; }
+
+        .re { border-color: #cc0000; }
+        .re:active { background: #cc0000; box-shadow: 0 0 25px #cc0000; }
+        .re:active .label { color: #fff; }
+
+        .footer {
+            margin-top: 40px;
+            font-size: 0.6rem;
+            color: #333;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ВЫБЕРИ ВСЕЛЕННУЮ</h1>
+
+    <div class="menu-grid">
+        <a href="cyber.html" class="game-btn cyber">
+            <span class="icon">🤖</span>
+            <span class="label">КИБЕРПАНК</span>
+        </a>
+        <a href="rdr2.html" class="game-btn rdr2">
+            <span class="icon">🤠</span>
+            <span class="label">RDR 2</span>
+        </a>
+        <a href="witcher.html" class="game-btn witcher">
+            <span class="icon">🐺</span>
+            <span class="label">ВЕДЬМАК</span>
+        </a>
+        <a href="re.html" class="game-btn re">
+            <span class="icon">☣️</span>
+            <span class="label">RESIDENT EVIL</span>
+        </a>
+    </div>
+
+    <div class="footer">СТАНЦИЯ_01 // ДР_2026</div>
+
+</body>
+</html>

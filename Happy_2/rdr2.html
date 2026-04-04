@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WANTED: THE LEGEND</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rye&family=Special+Elite&display=swap');
+
+        :root {
+            --rdr-red: #8b0000;
+            --paper-dark: #c4b087;
+            --paper-light: #e4d5b7;
+            --ink: #2b1d0e;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #0f0a07;
+            background-image: url('https://www.transparenttextures.com/patterns/dark-leather.png');
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            overflow: hidden;
+            font-family: 'Special Elite', typewriter;
+        }
+
+        /* Плакат с эффектом рваных краев */
+        .poster {
+            width: 100%;
+            max-width: 380px;
+            background: var(--paper-light);
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            padding: 25px;
+            border: 2px solid #333;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+            position: relative;
+            text-align: center;
+            color: var(--ink);
+            /* Обгоревшие края */
+            border-radius: 2px;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.2), 0 10px 30px rgba(0,0,0,0.7);
+        }
+
+        .newspaper-header {
+            border-bottom: 2px solid var(--ink);
+            font-size: 0.6rem;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-family: 'Rye', cursive;
+            font-size: 3.5rem;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .reward-box {
+            border: 3px solid var(--ink);
+            margin: 15px 0;
+            padding: 10px;
+        }
+
+        .reward-amount {
+            font-family: 'Rye', cursive;
+            font-size: 2.2rem;
+            color: var(--rdr-red);
+            display: block;
+        }
+
+        .cowboy-siluet {
+            font-size: 80px;
+            margin: 10px 0;
+            opacity: 0.9;
+            filter: grayscale(1);
+        }
+
+        .description {
+            font-size: 0.85rem;
+            line-height: 1.3;
+            border-top: 1px solid var(--ink);
+            padding-top: 10px;
+        }
+
+        .btn-draw {
+            background: var(--rdr-red);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            font-family: 'Rye', cursive;
+            font-size: 1.3rem;
+            margin-top: 20px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #4a0000;
+        }
+
+        .btn-draw:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #4a0000;
+        }
+
+        /* Пулевые отверстия */
+        .bullet-hole {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle, #111 20%, #333 40%, transparent 70%);
+            border-radius: 50%;
+            z-index: 10;
+            opacity: 0.9;
+            pointer-events: none;
+            animation: impact 0.1s ease-out;
+        }
+
+        @keyframes impact {
+            0% { transform: scale(3); opacity: 0; }
+            100% { transform: scale(1); opacity: 0.9; }
+        }
+
+        /* Финальное письмо (Dead Eye) */
+        #final-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(139, 0, 0, 0.95) 0%, rgba(20, 0, 0, 1) 100%);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #fff;
+        }
+
+        .letter {
+            max-width: 400px;
+            border-left: 3px solid var(--rdr-red);
+            padding-left: 20px;
+        }
+
+        .letter h2 {
+            font-family: 'Rye', cursive;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        #type-container {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .reboot {
+            margin-top: 30px;
+            background: white;
+            color: var(--rdr-red);
+            border: none;
+            padding: 12px 25px;
+            font-family: 'Special Elite', typewriter;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="poster" id="poster" onclick="addBulletHole(event)">
+        <div class="newspaper-header">
+            <span>THE SAINT DENIS TIMES</span>
+            <span>MAY 1899</span>
+        </div>
+        <h1>WANTED</h1>
+        <div style="letter-spacing: 4px; font-weight: bold; margin: 5px 0;">DEAD OR ALIVE</div>
+        
+        <div class="cowboy-siluet">🤠</div>
+
+        <div class="reward-box">
+            <span style="font-size: 0.8rem;">REWARD FOR INFORMATION</span>
+            <span class="reward-amount">$10,000</span>
+        </div>
+
+        <div class="description">
+            Разыскивается за дерзость, достижение нового уровня и за то, что является легендой этих земель.
+            <br><br>
+            <b>ВНИМАНИЕ:</b> Чрезвычайно удачлив и весел.
+        </div>
+
+        <button class="btn-draw" onclick="activateDeadEye(event)">ВЫХВАТИТЬ ОРУЖИЕ</button>
+    </div>
+
+    <div id="final-screen">
+        <div class="letter">
+            <h2>OUTLAW FOR LIFE</h2>
+            <div id="type-container"></div>
+            <button class="reboot" id="reboot-btn" onclick="location.reload()">RELOAD</button>
+        </div>
+    </div>
+
+<script>
+    // Звуковой эффект (визуальный) пули
+    function addBulletHole(e) {
+        const poster = document.getElementById('poster');
+        const hole = document.createElement('div');
+        hole.className = 'bullet-hole';
+        
+        // Позиция клика
+        const rect = poster.getBoundingClientRect();
+        const x = e.clientX - rect.left - 12;
+        const y = e.clientY - rect.top - 12;
+        
+        hole.style.left = x + 'px';
+        hole.style.top = y + 'px';
+        
+        poster.appendChild(hole);
+    }
+
+    const messages = [
+        "> Телеграмма получена...",
+        "> Слушай сюда, партнер. У меня есть ПЛАН!",
+        "> Сегодня ты стал еще на год легендарнее.",
+        "> Желаю тебе самого быстрого коня, верной банды и чтобы 'Меткий глаз' никогда не подводил.",
+        "> Пусть удача сопутствует в каждом деле, а карманы лопаются от золота.",
+        "> С ДНЕМ РОЖДЕНИЯ! МЫ ЕЩЕ ПОШУМИМ!"
+    ];
+
+    function activateDeadEye(e) {
+        e.stopPropagation(); // Чтобы не ставилась пуля под кнопкой
+        
+        setTimeout(() => {
+            document.getElementById('final-screen').style.display = 'flex';
+            
+            // Праздничный залп (красный и золотой)
+            confetti({
+                particleCount: 50,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#8b0000', '#ffd700']
+            });
+
+            startTyping(0);
+        }, 300);
+    }
+
+    async function startTyping(index) {
+        if (index < messages.length) {
+            const container = document.getElementById('type-container');
+            const line = document.createElement('div');
+            line.style.marginBottom = "15px";
+            container.appendChild(line);
+            
+            let charIndex = 0;
+            let currentText = messages[index];
+
+            function typeChar() {
+                if (charIndex < currentText.length) {
+                    line.textContent += currentText[charIndex];
+                    charIndex++;
+                    setTimeout(typeChar, 35);
+                } else {
+                    setTimeout(() => startTyping(index + 1), 300);
+                }
+            }
+            typeChar();
+        } else {
+            document.getElementById('reboot-btn').style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>

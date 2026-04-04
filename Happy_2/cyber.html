@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Breach Protocol v2.0.77</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --acid-green: #c1ff00;
+            --dark-bg: #080a04;
+            --faint-green: rgba(193, 255, 0, 0.15);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--acid-green);
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            overflow-x: hidden;
+            text-transform: uppercase;
+            padding: 10px;
+        }
+
+        /* Эффект линий сканирования */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 3px;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .terminal {
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid var(--acid-green);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 15px;
+            box-shadow: inset 0 0 15px var(--faint-green);
+            margin-top: 10px;
+        }
+
+        .header-top {
+            border-bottom: 1px solid var(--acid-green);
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+        }
+
+        .section-title {
+            background: var(--acid-green);
+            color: var(--dark-bg);
+            padding: 2px 8px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin: 15px 0 10px 0;
+            display: inline-block;
+        }
+
+        .buffer-zone {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .buffer-slot {
+            width: 35px;
+            height: 35px;
+            border: 1px solid var(--acid-green);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            aspect-ratio: 1 / 1;
+            border: 1px solid var(--faint-green);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .cell:active {
+            background: var(--acid-green);
+            color: var(--dark-bg);
+        }
+
+        .sequence-list {
+            font-size: 0.8rem;
+            border-top: 1px solid var(--faint-green);
+            padding-top: 10px;
+        }
+
+        .seq-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+
+        .seq-code { color: #fff; letter-spacing: 2px; }
+
+        /* Экран Успеха */
+        #success-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--dark-bg);
+            z-index: 200;
+            padding: 30px 20px;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .final-content {
+            border-left: 3px solid var(--acid-green);
+            padding-left: 15px;
+        }
+
+        h1 { font-size: 1.8rem; color: var(--acid-green); margin: 0 0 20px 0; }
+        p { font-size: 0.95rem; line-height: 1.5; color: #eee; margin: 10px 0; }
+        
+        .btn-reboot {
+            margin-top: 40px;
+            background: none;
+            border: 1px solid var(--acid-green);
+            color: var(--acid-green);
+            padding: 12px;
+            width: 100%;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="terminal" id="main-ui">
+    <div class="header-top">
+        <span>LOCAL_NET::BREACH_V2.0</span>
+        <span style="color: white;">LIVE</span>
+    </div>
+
+    <div class="section-title">ЦЕЛЬ_ВЗЛОМА</div>
+    <div class="sequence-list">
+        <div class="seq-item">
+            <span>ВЗЛОМ_ПОДАРКА</span>
+            <span class="seq-code">## ## ##</span>
+        </div>
+        <div class="seq-item" style="opacity: 1; border-left: 2px solid var(--acid-green); padding-left: 5px;">
+            <span>ПОЛУЧИТЬ_ПОЗДРАВЛЕНИЕ</span>
+            <span class="seq-code">55 BD 1C</span>
+        </div>
+    </div>
+
+    <div class="section-title">БУФЕР_ПЕРЕДАЧИ</div>
+    <div class="buffer-zone">
+        <div class="buffer-slot" id="b0"></div>
+        <div class="buffer-slot" id="b1"></div>
+        <div class="buffer-slot" id="b2"></div>
+    </div>
+	
+    <div class="section-title">МАТРИЦА_КОДА</div>
+    <div class="grid" id="matrix"></div>
+</div>
+
+<div id="success-overlay">
+    <div class="final-content" id="type-container">
+        <!-- Текст печатается здесь -->
+    </div>
+    <button class="btn-reboot" id="reboot-btn" style="display: none;" onclick="location.reload()">ПЕРЕЗАГРУЗИТЬ ДЕЙСТВИЕ</button>
+</div>
+
+<script>
+    const codes = ['BD', '55', 'E9', '1C', '77', 'A0'];
+    const matrixGrid = document.getElementById('matrix');
+    let bufferIndex = 0;
+
+    // Сообщение для печати
+    const messages = [
+        '<h1>ВЗЛОМ ЗАВЕРШЕН</h1>',
+        '<p>> Соединение: <span style="color: var(--acid-green);">СТАБИЛЬНОЕ</span></p>',
+        '<p>> Чумба, поздравляю с Днем Рождения!</p>',
+        '<p>> Желаю, чтобы твой личный Cyberdeck работал без перегрева, а в Найт-Сити тебе всегда горел зеленый свет.</p>',
+        '<p>> Будь легендой, хватай удачу за хвост и береги свои импланты. ✨</p>',
+        '<p style="font-size: 0.7rem; color: #666; margin-top: 20px;">// ПОДТВЕРЖДЕНО СИСТЕМОЙ ПОСМЕРТИЯ //</p>'
+    ];
+
+    // Инициализация матрицы
+    for (let i = 0; i < 25; i++) {
+        const div = document.createElement('div');
+        div.className = 'cell';
+        div.textContent = codes[Math.floor(Math.random() * codes.length)];
+        div.onclick = function() {
+            if (bufferIndex < 3) {
+                const currentSlot = document.getElementById('b' + bufferIndex);
+                if (currentSlot) {
+                    currentSlot.textContent = this.textContent;
+                    this.style.opacity = '0.2';
+                    this.style.pointerEvents = 'none';
+                    bufferIndex++;
+                }
+                if (bufferIndex === 3) {
+                    setTimeout(showSuccess, 400);
+                }
+            }
+        };
+        matrixGrid.appendChild(div);
+    }
+
+    function showSuccess() {
+        document.getElementById('success-overlay').style.display = 'flex';
+        startTyping(0);
+        
+        confetti({
+            particleCount: 40,
+            spread: 70,
+            origin: { y: 0.7 },
+            colors: ['#c1ff00', '#ffffff', '#333333'],
+            scalar: 0.9
+        });
+    }
+
+    async function startTyping(index) {
+        if (index < messages.length) {
+            const container = document.getElementById('type-container');
+            const line = document.createElement('div');
+            container.appendChild(line);
+            
+            let charIndex = 0;
+            let currentText = messages[index];
+            let isTag = false;
+            let visibleText = "";
+
+            function typeChar() {
+                if (charIndex < currentText.length) {
+                    if (currentText[charIndex] === '<') isTag = true;
+                    visibleText += currentText[charIndex];
+                    if (currentText[charIndex] === '>') isTag = false;
+
+                    line.innerHTML = visibleText;
+                    charIndex++;
+
+                    if (isTag) typeChar();
+                    else setTimeout(typeChar, 30);
+                } else {
+                    setTimeout(() => startTyping(index + 1), 200);
+                }
+            }
+            typeChar();
+        } else {
+            const btn = document.getElementById('reboot-btn');
+            btn.style.display = 'block';
+            btn.style.animation = 'fadeIn 1s forwards';
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Witcher Senses: B-Day</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Marcellus&display=swap');
+
+        :root {
+            --aard-blue: #00d4ff;
+            --igni-orange: #ff6600;
+            --quen-yellow: #ffcc00;
+            --witcher-silver: #e0e0e0;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: #0c0c0c;
+            /* Текстура темного камня */
+            background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+            color: var(--witcher-silver);
+            font-family: 'Marcellus', serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Медальон */
+        .medallion {
+            font-size: 100px;
+            margin-bottom: 20px;
+            display: inline-block;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
+            animation: vibrate 0.3s infinite;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        @keyframes vibrate {
+            0% { transform: translate(0); }
+            25% { transform: translate(1px, -1px); }
+            50% { transform: translate(-1px, 1px); }
+            75% { transform: translate(1px, 1px); }
+            100% { transform: translate(0); }
+        }
+
+        .instruction {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 3px;
+            color: #666;
+            margin-bottom: 50px;
+            font-size: 0.9rem;
+        }
+
+        /* Знаки */
+        .signs-row {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+        }
+
+        .sign-btn {
+            width: 70px;
+            height: 70px;
+            border: 2px solid #333;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .aard:hover { border-color: var(--aard-blue); color: var(--aard-blue); box-shadow: 0 0 20px var(--aard-blue); transform: scale(1.1); }
+        .igni:hover { border-color: var(--igni-orange); color: var(--igni-orange); box-shadow: 0 0 20px var(--igni-orange); transform: scale(1.1); }
+        .quen:hover { border-color: var(--quen-yellow); color: var(--quen-yellow); box-shadow: 0 0 20px var(--quen-yellow); transform: scale(1.1); }
+
+        /* Экран откровения */
+        #reveal-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #1a1a1a 0%, #050505 100%);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .b-day-message {
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 2.2rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            margin-bottom: 30px;
+        }
+
+        .text-content {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #bbb;
+            animation: glowText 2s ease-in-out;
+        }
+
+        @keyframes glowText {
+            from { opacity: 0; transform: translateY(10px); filter: blur(5px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+        .highlight {
+            color: var(--witcher-silver);
+            font-weight: bold;
+            border-bottom: 1px solid #444;
+        }
+
+        .reset-btn {
+            margin-top: 40px;
+            background: none;
+            border: 1px solid #444;
+            color: #666;
+            padding: 10px 20px;
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        .reset-btn:hover {
+            color: #fff;
+            border-color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-ui">
+        <div class="medallion">🐺</div>
+        <div class="instruction">Медальон дрожит... Примени знак</div>
+        
+        <div class="signs-row">
+            <div class="sign-btn aard" onclick="castSign('aard')">A</div>
+            <div class="sign-btn igni" onclick="castSign('igni')">I</div>
+            <div class="sign-btn quen" onclick="castSign('quen')">Q</div>
+        </div>
+        <p style="font-size: 0.7rem; margin-top: 40px; color: #333; letter-spacing: 2px;">Школа Волка | Велен | 1272</p>
+    </div>
+
+    <div id="reveal-screen">
+        <div class="b-day-message">
+            <h1>Задание Выполнено</h1>
+            <div class="text-content">
+                <p>В этот день звезды над Континентом сошлись в редком созвездии.</p>
+                <p>Желаю, чтобы твои мечи — стальной и серебряный — всегда были остры, а <span class="highlight">чеканная монета</span> сама шла в руки.</p>
+                <p>Пусть Плотва не знает преград, а эликсиры радости никогда не кончаются.</p>
+                <p><span class="highlight">С Днем Рождения, легенда!</span> <br>Удачи на ведьмачьем тракте.</p>
+            </div>
+            <button class="reset-btn" onclick="location.reload()">Вернуться назад</button>
+        </div>
+    </div>
+
+<script>
+    function castSign(sign) {
+        let color;
+        if (sign === 'aard') color = '#00d4ff';
+        if (sign === 'igni') color = '#ff6600';
+        if (sign === 'quen') color = '#ffcc00';
+
+        // Визуальный эффект знака
+        confetti({
+            particleCount: 120,
+            spread: 80,
+            origin: { y: 0.5 },
+            colors: [color, '#ffffff'],
+            scalar: 1.4,
+            gravity: 0.8
+        });
+
+        // Скрываем старый UI и плавно показываем сообщение
+        const mainUi = document.getElementById('main-ui');
+        const revealScreen = document.getElementById('reveal-screen');
+
+        mainUi.style.opacity = '0';
+        
+        setTimeout(() => {
+            mainUi.style.display = 'none';
+            revealScreen.style.display = 'flex';
+            setTimeout(() => {
+                revealScreen.style.opacity = '1';
+            }, 50);
+        }, 500);
+    }
+</script>
+
+</body>
+</html>
