@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+	<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'&gt;&lt;text x='0' y='16' font-size='16'&gt;💕&lt;/text&gt;&lt;/svg&gt;" type="image/svg+xml">
+    <title>Made For D 💕</title>
+    <style>
+        :root {
+            --pink: #ff6b9d;
+            --pink-dark: #e91e63;
+            --bg: #0a0a0a;
+            --page-bg: #fffef9;
+            --text: #4a2c3e;
+            --book-border: rgba(255, 255, 255, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: "Segoe UI", "Quicksand", system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            color: var(--text);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: none;
+        }
+        #matrixCanvas.active {
+            display: block;
+        }
+
+        /* ============ ЗАСТАВКА ПОВОРОТА ============ */
+        .rotate-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, #1a0a10 0%, #0a0a0a 100%);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity .6s ease, visibility .6s ease;
+        }
+        .rotate-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .rotate-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 30px rgba(255, 107, 157, .6));
+            animation: rotatePhone 2.5s ease-in-out infinite;
+        }
+        @keyframes rotatePhone {
+            0%,
+            100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(90deg);
+            }
+            50% {
+                transform: rotate(90deg);
+            }
+            75% {
+                transform: rotate(0deg);
+            }
+        }
+        .rotate-text {
+            color: var(--pink);
+            font-weight: 700;
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: .5rem;
+            text-shadow: 0 0 20px rgba(255, 107, 157, .5);
+        }
+        .rotate-sub {
+            color: rgba(255, 180, 210, .8);
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        .rotate-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 1.5rem;
+        }
+        .rotate-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pink);
+            animation: dotPulse 1.4s ease-in-out infinite;
+        }
+        .rotate-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .rotate-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes dotPulse {
+            0%,
+            80%,
+            100% {
+                transform: scale(0.6);
+                opacity: 0.4;
+            }
+            40% {
+                transform: scale(1.3);
+                opacity: 1;
+            }
+        }
+
+        /* ============ ОСНОВНАЯ СЦЕНА ============ */
+        .main-stage {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            pointer-events: none;
+        }
+
+        /* ============ КНИГА ============ */
+        .book-stage {
+            pointer-events: auto;
+            width: 90%;
+            max-width: 500px;
+            height: calc(80vh);
+            max-height: 720px;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            perspective: 1400px;
+        }
+        .book-stage.visible {
+            display: flex;
+        }
+
+        .book-3d-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Оболочка книги */
+        .book-shell {
+            width: 100%;
+            max-width: 500px;
+            height: 400px;
+            position: relative;
+            transform-origin: center center;
+            transition: transform 220ms ease;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+        }
+
+        /* ============ ОБЛОЖКА (закрытая книга) ============ */
+        .book-cover {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #ff9a9e 0%, #fbc2eb 50%, #ff6b9d 100%);
+            border-radius: 12px;
+            box-shadow: 8px 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 107, 157, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid #fff;
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+            transform-origin: left center;
+            backface-visibility: hidden;
+        }
+        .book-cover.opened {
+            transform: rotateY(-180deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+		/* ============ СИЯЮЩИЙ ЗАГОЛОВОК НА ОБЛОЖКЕ ============ */
+		.book-cover-title {
+			font-size: 1.6rem;
+			font-weight: 700;
+			text-align: center;
+			line-height: 1.5;
+			/* Градиентный текст */
+			background: linear-gradient(
+				135deg,
+				#ffffff 0%,
+				#ffe0ec 20%,
+				#ffb3c6 40%,
+				#ffffff 50%,
+				#ffd1e0 60%,
+				#ffffff 80%,
+				#ffe0ec 100%
+			);
+			background-size: 300% 300%;
+			-webkit-background-clip: text;
+			background-clip: text;
+			-webkit-text-fill-color: transparent;
+			/* Убираем старый text-shadow (он не работает с background-clip) */
+			filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+			animation: titleShimmer 3s ease-in-out infinite;
+		}
+
+		@keyframes titleShimmer {
+			0%, 100% {
+				background-position: 0% 50%;
+			}
+			25% {
+				background-position: 100% 0%;
+			}
+			50% {
+				background-position: 100% 100%;
+			}
+			75% {
+				background-position: 0% 100%;
+			}
+		}
+
+		/* Для мобильных */
+		@media (max-width: 480px) {
+			.book-cover-title {
+				font-size: 1.3rem;
+			}
+		}
+        .book-cover-emoji {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+        }
+        .book-cover-hint {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            animation: hintPulse 2s ease-in-out infinite;
+        }
+        @keyframes hintPulse {
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ============ РАЗВОРОТ КНИГИ ============ */
+        .book-spread-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease 0.3s;
+            pointer-events: none;
+        }
+        .book-spread-container.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .book-frame {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            box-shadow: 0 8px 28px rgba(0, 0, 0, .6), 0 0 30px rgba(255, 107, 157, .08);
+            border: 3px solid var(--book-border);
+            position: relative;
+            overflow: visible;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .spread {
+            width: 92%;
+            height: 86%;
+            max-width: 92%;
+            max-height: 86%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            perspective: 1200px;
+            border-radius: 8px;
+        }
+
+        .page-static {
+            width: 50%;
+            height: 100%;
+            background: var(--page-bg);
+            box-shadow: inset 0 0 0 2px #fff;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .page-divider {
+            position: absolute;
+            left: 50%;
+            top: 6%;
+            bottom: 6%;
+            transform: translateX(-50%);
+            width: 2px;
+            background: rgba(0, 0, 0, 0.08);
+            z-index: 5;
+            border-radius: 2px;
+        }
+
+        .flip-page {
+            position: absolute;
+            width: 50%;
+            height: 100%;
+            right: 0;
+            top: 0;
+            transform-origin: left center;
+            transform: rotateY(0deg);
+            backface-visibility: hidden;
+            z-index: 20;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            perspective: 1200px;
+            will-change: transform;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--page-bg);
+        }
+
+        .flip-page .back {
+            position: absolute;
+            inset: 0;
+            transform: rotateY(180deg);
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .page-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px;
+            overflow-y: auto;
+        }
+        .page-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .page-emoji {
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+        }
+        .page-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--pink-dark);
+            margin-bottom: 0.3rem;
+        }
+        .page-text {
+            font-size: 0.85rem;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .page-static.right-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.035));
+            pointer-events: none;
+            border-radius: 6px;
+        }
+
+        /* ============ КНОПКИ ============ */
+        .controls-wrap {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 6px;
+            pointer-events: auto;
+        }
+        .ctrl-btn {
+            background: rgba(255, 255, 255, .08);
+            border: 2px solid rgba(255, 255, 255, .12);
+            color: white;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .18s;
+        }
+        .ctrl-btn:hover {
+            background: var(--pink);
+            border-color: var(--pink);
+            box-shadow: 0 0 20px rgba(255, 107, 157, .5);
+        }
+        .ctrl-btn:disabled {
+            opacity: .35;
+            pointer-events: none;
+        }
+        .page-indicator {
+            color: rgba(255, 255, 255, .8);
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, .12);
+            border: 2px solid rgba(255, 255, 255, .4);
+            color: white;
+            padding: 8px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all .3s;
+            letter-spacing: 0.5px;
+            margin-top: 6px;
+        }
+        .close-btn:hover {
+            background: var(--pink-dark);
+            border-color: var(--pink-dark);
+            box-shadow: 0 0 30px rgba(233, 30, 99, .7);
+        }
+
+        .page-shadow {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 15;
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.06), rgba(0, 0, 0, 0));
+            mix-blend-mode: multiply;
+            border-radius: 8px;
+        }
+
+        /* ============ ЧАСТИЦЫ И ФЕЙЕРВЕРКИ ============ */
+        .closing-particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 50;
+            font-size: 1.5rem;
+            animation: particleFly 1.5s ease-out forwards;
+        }
+        @keyframes particleFly {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--px), var(--py)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .firework-container {
+            position: fixed;
+            pointer-events: none;
+            z-index: 60;
+        }
+        .firework {
+            position: absolute;
+            width: 6px;
+            height: 18px;
+            background: radial-gradient(circle, #ff9ab0, #e94b8a);
+            border-radius: 3px;
+            animation: fireworkBurst 1.2s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes fireworkBurst {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-80px) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .heart-photo {
+            position: fixed;
+            pointer-events: none;
+            z-index: 55;
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, .5), 0 0 20px rgba(255, 107, 157, .4);
+            transition: left .9s cubic-bezier(.2, .9, .2, 1), top .9s cubic-bezier(.2, .9, .2, 1), opacity .5s ease, transform .9s cubic-bezier(.2, .9, .2, 1);
+        }
+
+        @media (max-width: 480px) {
+            .book-shell {
+                height: 320px;
+            }
+            .spread {
+                width: 94%;
+                height: 88%;
+            }
+            .rotate-icon {
+                font-size: 3.5rem;
+            }
+            .rotate-text {
+                font-size: 1.1rem;
+            }
+            .book-cover-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrixCanvas"></canvas>
+
+    <!-- Заставка поворота -->
+	<div class="rotate-overlay" id="rotateOverlay">
+	  <div class="rotate-icon">📱</div>
+	  <div class="rotate-text">Пожалуйста, поверни телефон<br>горизонтально 💕</div>
+	  <div class="rotate-dots">
+		<div class="rotate-dot"></div>
+		<div class="rotate-dot"></div>
+		<div class="rotate-dot"></div>
+	  </div>
+	</div>
+
+    <!-- Основная сцена -->
+    <div class="main-stage" id="mainStage">
+        <div class="book-stage" id="bookStage">
+            <div class="book-3d-wrapper">
+                <div class="book-shell" id="bookShell">
+                    <!-- Обложка -->
+				<div class="book-cover" id="bookCover">
+				  <div class="book-cover-emoji">📖</div>
+				  <div class="book-cover-title">Сделано для<br>@werd1th 💕</div>
+				  <div class="book-cover-hint">👆 Нажми, чтобы открыть</div>
+				</div>
+
+                    <!-- Разворот книги (изначально скрыт) -->
+                    <div class="book-spread-container" id="bookSpreadContainer">
+                        <div class="book-frame">
+                            <div class="spread" id="spread">
+                                <div class="page-static left" id="pageLeft">
+                                    <div class="page-content" id="leftContent"></div>
+                                </div>
+                                <div class="page-divider"></div>
+                                <div class="page-static right right-overlay" id="pageRight">
+                                    <div class="page-content" id="rightContent"></div>
+                                </div>
+                                <div class="flip-page" id="flipPage">
+                                    <div class="front page-content" id="flipFront"></div>
+                                    <div class="back page-content" id="flipBack"></div>
+                                </div>
+                                <div class="page-shadow"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки управления (изначально скрыты) -->
+            <div class="controls-wrap" id="controlsWrap" style="display:none;">
+                <button class="ctrl-btn" id="prevBtn">◀</button>
+                <span class="page-indicator" id="pageIndicator">1 / 6</span>
+                <button class="ctrl-btn" id="nextBtn">▶</button>
+            </div>
+            <button class="close-btn" id="closeBookBtn" style="display:none;">✨ Đóng sách ✨</button>
+        </div>
+    </div>
+
+<script>
+    // ==================== КОНФИГ ====================
+    const PHOTO_URLS = [
+        'image/photo1.jpg',
+        'image/photo2.jpg',
+        'image/photo3.jpg',
+        'image/photo4.jpg',
+		'image/photo5.jpg',
+		'image/photo6.jpg',
+		'image/photo7.jpg',
+    ];
+
+	
+	// ==================== СЧЁТЧИК ДНЕЙ ====================
+	const RELATIONSHIP_START_DATE = new Date('2025-07-10'); // ГГГГ-ММ-ДД
+
+	function getDaysTogether() {
+		const today = new Date();
+		const diffTime = today.getTime() - RELATIONSHIP_START_DATE.getTime();
+		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+		return diffDays;
+	}
+
+	const PAGES = [
+		{ 
+			left: 'text', 
+			leftTitle: '💌 С Днём Рождения 💕', 
+			leftBody: `Сегодня твой особенный день, и я хочу, чтобы он был наполнен радостью, улыбками и любовью.\n\n Листай дальше ->`, 
+			right: 'image', 
+			rightImg: 'image/photo1.jpg' 
+		},
+		{ 
+			left: 'image', 
+			leftImg: 'image/photo6.jpg', 
+			right: 'text', 
+			rightTitle: '🖼', 
+			rightBody: `Так как у меня нету твоих фото, тут будут фигурировать котики ^-^` 
+		},
+		
+		{ 
+			left: 'image', 
+			leftImg: 'image/photo2.jpg', 
+			right: 'text', 
+			rightTitle: '✨ Желаю тебе', 
+			rightBody: `Пусть каждый миг этого дня будет волшебным. Пусть сбудутся все твои мечты, а глаза сияют ярче звёзд. Ты заслуживаешь всего самого лучшего!` 
+		},
+		{ 
+			left: 'text', 
+			leftTitle: '💖 Ты — чудо', 
+			leftBody: `Ты приносишь свет и тепло в мою жизнь. Спасибо, что ты есть!  Мы общаемся уже ${getDaysTogether()} дней, и каждый из них — подарок для меня.`, 
+			right: 'image', 
+			rightImg: 'image/photo3.jpg' 
+		},
+		{ 
+			left: 'image', 
+			leftImg: 'image/photo4.jpg', 
+			right: 'image', 
+			rightImg: 'image/photo5.jpg' 
+		},
+		{ 
+			left: 'text', 
+			leftTitle: '💝 Люблю тебя', 
+			leftBody: `С Днём Рождения, моя родная!\n\nПусть этот год принесёт тебе всё, о чём ты мечтаешь.💕🎂✨`, 
+			right: 'image', 
+			rightImg: 'image/photo7.jpg' 
+		},
+	];
+
+    const totalSpreads = PAGES.length;
+    let currentSpreadIndex = 0;
+    let bookOpened = false;
+
+    // ==================== ЭЛЕМЕНТЫ ====================
+    const matrixCanvas = document.getElementById('matrixCanvas');
+    const ctx = matrixCanvas.getContext('2d');
+    const rotateOverlay = document.getElementById('rotateOverlay');
+    const bookStage = document.getElementById('bookStage');
+    const bookShell = document.getElementById('bookShell');
+    const bookCover = document.getElementById('bookCover');
+    const bookSpreadContainer = document.getElementById('bookSpreadContainer');
+    const spread = document.getElementById('spread');
+    const flipPage = document.getElementById('flipPage');
+    const leftContent = document.getElementById('leftContent');
+    const rightContent = document.getElementById('rightContent');
+    const flipFront = document.getElementById('flipFront');
+    const flipBack = document.getElementById('flipBack');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageIndicator = document.getElementById('pageIndicator');
+    const closeBtn = document.getElementById('closeBookBtn');
+    const controlsWrap = document.getElementById('controlsWrap');
+
+    // ==================== МАТРИЧНЫЙ ДОЖДЬ ====================
+    let width, height;
+    let dots = [];
+    const DOT_COUNT = 600;
+    const STATE = { RAIN: 'rain', COUNTDOWN: 'countdown', HEART: 'heart', BOOK: 'book', FINAL: 'final' };
+    let currentState = STATE.RAIN;
+    let countdownNumber = 3;
+    const COUNTDOWN_DURATION = 1500;
+    let countdownStartTime = 0;
+    let heartFormTime = 0;
+    const HEART_FORM_DURATION = 1500;
+    let bookReady = false;
+    let allSystemsGo = false;
+    let orientationChecked = false;
+
+    class Dot {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height - height;
+            this.speed = 1.5 + Math.random() * 3;
+            this.size = 1.8 + Math.random() * 2.2;
+            this.opacity = 0.5 + Math.random() * 0.5;
+            this.targetX = this.x;
+            this.targetY = this.y;
+            this.lerpFactor = 0;
+        }
+    }
+
+    function resizeCanvas() {
+        width = matrixCanvas.width = window.innerWidth;
+        height = matrixCanvas.height = window.innerHeight;
+        if (dots.length === 0 || dots.length !== DOT_COUNT) {
+            dots = [];
+            for (let i = 0; i < DOT_COUNT; i++) dots.push(new Dot());
+        }
+        if (currentState === STATE.COUNTDOWN) setDotsTargetToNumber(countdownNumber);
+        else if (currentState === STATE.HEART) setDotsTargetToHeart();
+    }
+
+    function getNumberPattern(num) {
+        const tc = document.createElement('canvas');
+        tc.width = width; tc.height = height;
+        const tctx = tc.getContext('2d');
+        tctx.fillStyle = 'white';
+        tctx.font = `bold ${Math.min(width,height)*0.5}px "Courier New",monospace`;
+        tctx.textAlign = 'center';
+        tctx.textBaseline = 'middle';
+        tctx.fillText(num.toString(), width/2, height/2);
+        const id = tctx.getImageData(0,0,width,height);
+        const pts = [];
+        for (let y = 0; y < height; y += 3)
+            for (let x = 0; x < width; x += 3)
+                if (id.data[(y*width+x)*4+3] > 128) pts.push({x,y});
+        return pts;
+    }
+
+    function getHeartPattern() {
+        const pts = [];
+        const cx = width/2, cy = height/2;
+        const dw = Math.min(width,height)*0.85, dh = Math.min(width,height)*0.75;
+        function raw(tVal) {
+            return {
+                x: 16 * Math.pow(Math.sin(tVal), 3),
+                y: -(13*Math.cos(tVal) - 5*Math.cos(2*tVal) - 2*Math.cos(3*tVal) - Math.cos(4*tVal))
+            };
+        }
+        const st = 4000;
+        const tsArr = new Array(st+1), psArr = new Array(st+1);
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (let i = 0; i <= st; i++) {
+            const tVal = (i/st)*Math.PI*2;
+            tsArr[i] = tVal; psArr[i] = raw(tVal);
+            minX = Math.min(minX, psArr[i].x); maxX = Math.max(maxX, psArr[i].x);
+            minY = Math.min(minY, psArr[i].y); maxY = Math.max(maxY, psArr[i].y);
+        }
+        const cum = new Array(st+1); cum[0] = 0;
+        for (let i = 1; i <= st; i++) cum[i] = cum[i-1] + Math.hypot(psArr[i].x-psArr[i-1].x, psArr[i].y-psArr[i-1].y);
+        const tl = cum[st], rw = maxX-minX, rh = maxY-minY, rcx = (minX+maxX)/2, rcy = (minY+maxY)/2;
+        const totalSteps = Math.max(DOT_COUNT, Math.floor(tl*1.2));
+        for (let i = 0; i < totalSteps; i++) {
+            const tgt = (i/totalSteps)*tl;
+            let lo = 0, hi = st;
+            while (lo < hi) { const mid = Math.floor((lo+hi)/2); if (cum[mid] < tgt) lo = mid+1; else hi = mid; }
+            const j = Math.max(0, lo-1), seg = cum[j+1]-cum[j]||1, frac = (tgt-cum[j])/seg;
+            const tVal = tsArr[j] + frac*(tsArr[j+1]-tsArr[j]), r = raw(tVal);
+            pts.push({
+                x: cx + ((r.x-rcx)/(rw/2))*(dw/2) + (Math.random()-0.5)*2.5,
+                y: cy + ((r.y-rcy)/(rh/2))*(dh/2) + (Math.random()-0.5)*2.5
+            });
+        }
+        return pts;
+    }
+
+    function setDotsTargetToNumber(num) {
+        const p = getNumberPattern(num);
+        if (!p.length) return;
+        for (let i = 0; i < dots.length; i++) {
+            const target = p[i%p.length];
+            dots[i].targetX = target.x; dots[i].targetY = target.y; dots[i].lerpFactor = 0.07;
+        }
+        if (dots.length > p.length)
+            for (let i = p.length; i < dots.length; i++) {
+                const target = p[Math.floor(Math.random()*p.length)];
+                dots[i].targetX = target.x + (Math.random()-0.5)*8;
+                dots[i].targetY = target.y + (Math.random()-0.5)*8;
+                dots[i].lerpFactor = 0.05;
+            }
+    }
+
+    function setDotsTargetToHeart() {
+        const p = getHeartPattern();
+        for (let i = 0; i < dots.length; i++) {
+            const target = p[i%p.length];
+            dots[i].targetX = target.x; dots[i].targetY = target.y; dots[i].lerpFactor = 0.05;
+        }
+    }
+
+    function startCountdown() { currentState = STATE.COUNTDOWN; countdownNumber = 3; countdownStartTime = performance.now(); setDotsTargetToNumber(countdownNumber); }
+    function startHeartFormation() { currentState = STATE.HEART; heartFormTime = performance.now(); setDotsTargetToHeart(); }
+    function showBook() {
+        bookStage.classList.add('visible'); bookReady = true;
+        matrixCanvas.style.transition = 'opacity 2s'; matrixCanvas.style.opacity = '0.25';
+        fitBookToStage(); renderSpread(currentSpreadIndex);
+    }
+
+    function openBook() {
+        if (bookOpened || !bookReady) return;
+        bookOpened = true;
+        bookCover.classList.add('opened');
+        bookSpreadContainer.classList.add('visible');
+        //controlsWrap.style.display = 'flex';
+        //closeBtn.style.display = 'inline-block';
+        updateNavButtons();
+    }
+
+    bookCover.addEventListener('click', openBook);
+    bookSpreadContainer.addEventListener('click', (e) => { if (!bookOpened && bookReady) openBook(); });
+
+    // ==================== ОРИЕНТАЦИЯ ====================
+    function isLandscape() { return window.innerWidth > window.innerHeight; }
+    function checkOrientation() {
+        if (allSystemsGo) return;
+        if (isLandscape() || window.innerWidth >= 768) {
+            if (!orientationChecked) {
+                orientationChecked = true; allSystemsGo = true;
+                rotateOverlay.classList.add('hidden'); matrixCanvas.classList.add('active');
+                resizeCanvas(); setTimeout(() => startCountdown(), 1800);
+                requestAnimationFrame(animate);
+            }
+        } else { rotateOverlay.classList.remove('hidden'); }
+    }
+    window.addEventListener('resize', () => {
+        checkOrientation();
+        if (allSystemsGo) { resizeCanvas(); if (currentState===STATE.COUNTDOWN) setDotsTargetToNumber(countdownNumber); if (currentState===STATE.HEART) setDotsTargetToHeart(); fitBookToStage(); }
+    });
+    window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 300));
+
+    if (window.innerWidth >= 768 && isLandscape()) {
+        allSystemsGo = true; orientationChecked = true;
+        rotateOverlay.classList.add('hidden'); matrixCanvas.classList.add('active');
+        resizeCanvas(); setTimeout(() => startCountdown(), 1800);
+    } else { checkOrientation(); }
+
+    function fitBookToStage() {
+        const wrapper = document.querySelector('.book-3d-wrapper');
+        if (!wrapper) return;
+        const rect = wrapper.getBoundingClientRect();
+        const s = Math.min(rect.width/420, rect.height/400, 1);
+        bookShell.style.transform = `scale(${s})`;
+    }
+    window.addEventListener('load', fitBookToStage);
+
+
+    // ==================== РЕНДЕР СТРАНИЦ ====================
+    function renderContent(el, page) {
+		el.innerHTML = '';
+		if (typeof page === 'object') {
+			const title = page.title || '';
+			const body = page.body || '';
+			if (page.img) {
+				el.innerHTML = `<img class="page-img" src="${page.img}" alt="photo">`;
+			} else {
+				// Разделяем заголовок на эмодзи и текст
+				const parts = title.split(' ');
+				const emoji = parts[0] || '💕'; // Первый элемент — крупный эмодзи
+				const restTitle = parts.slice(1).join(' '); // Остальное — текст заголовка
+				
+				if (restTitle) {
+					// Есть и эмодзи, и текст
+					el.innerHTML = `<div class="page-emoji">${emoji}</div><div class="page-title">${restTitle}</div><div class="page-text">${body}</div>`;
+				} else {
+					// Только эмодзи (или только текст)
+					el.innerHTML = `<div class="page-emoji">${emoji}</div><div class="page-text">${body}</div>`;
+				}
+			}
+		}
+	}
+
+    function renderSpread(index) {
+        const d = PAGES[index];
+        if (d.left === 'text') renderContent(leftContent, { title: d.leftTitle||'', body: d.leftBody||'' });
+        else if (d.left === 'image') leftContent.innerHTML = `<img class="page-img" src="${d.leftImg||''}" alt="photo">`;
+        if (d.right === 'text') renderContent(rightContent, { title: d.rightTitle||'', body: d.rightBody||'' });
+        else if (d.right === 'image') rightContent.innerHTML = `<img class="page-img" src="${d.rightImg||''}" alt="photo">`;
+        pageIndicator.textContent = `${index+1} / ${totalSpreads}`;
+        updateNavButtons();
+    }
+
+    function updateNavButtons() {
+        prevBtn.disabled = currentSpreadIndex === 0;
+        nextBtn.disabled = false;
+        if (currentSpreadIndex === totalSpreads - 1) {
+            nextBtn.textContent = '✨';
+        } else {
+            nextBtn.textContent = '▶';
+            nextBtn.title = '';
+        }
+    }
+
+    // ==================== ПЕРЕЛИСТЫВАНИЕ ====================
+    let flipAnimating = false;
+    let flipAnimFrame = null;
+    let bookClosing = false;
+
+    function resetFlipElement() {
+        flipPage.style.right = '0'; flipPage.style.left = '50%'; flipPage.style.width = '50%';
+        flipPage.style.transformOrigin = 'left center'; flipPage.style.boxShadow = '0 6px 24px rgba(0,0,0,0.25)';
+        flipPage.style.zIndex = 20; flipPage.style.transition = 'none'; flipPage.style.transform = 'rotateY(0deg)';
+    }
+    resetFlipElement();
+    flipPage.style.display = 'none';
+
+	function animateFlip(goForward = true) {
+		if (flipAnimating || bookClosing) return;
+		if (goForward && currentSpreadIndex >= totalSpreads - 1) { closeBookToHeart(); return; }
+		if (!goForward && currentSpreadIndex <= 0) return;
+
+		flipAnimating = true;
+		const flipDuration = 650;
+		const flipStartTime = performance.now();
+		const angleFrom = goForward ? 0 : -180;
+		const angleTo = goForward ? -180 : 0;
+		let contentSwapped = false; // Флаг для замены контента на полпути
+
+		if (goForward) {
+			const currData = PAGES[currentSpreadIndex];
+			renderContent(flipFront, { title: currData.rightTitle||'', body: currData.rightBody||'', img: currData.rightImg||'' });
+			const nextData = PAGES[currentSpreadIndex+1];
+			renderContent(flipBack, { title: nextData.leftTitle||'', body: nextData.leftBody||'', img: nextData.leftImg||'' });
+			flipPage.style.left = '50%'; flipPage.style.right = '0'; flipPage.style.transformOrigin = 'left center';
+		} else {
+			const currData = PAGES[currentSpreadIndex];
+			renderContent(flipFront, { title: currData.leftTitle||'', body: currData.leftBody||'', img: currData.leftImg||'' });
+			const prevData = PAGES[currentSpreadIndex-1];
+			renderContent(flipBack, { title: prevData.rightTitle||'', body: prevData.rightBody||'', img: prevData.rightImg||'' });
+			flipPage.style.left = '0'; flipPage.style.right = '50%'; flipPage.style.transformOrigin = 'right center';
+		}
+
+		flipPage.style.display = 'flex'; flipPage.style.willChange = 'transform'; flipPage.style.transform = `rotateY(${angleFrom}deg)`;
+
+		function flipStep(currentTime) {
+			const elapsedRatio = Math.min(1, (currentTime - flipStartTime) / flipDuration);
+			const easedRatio = ((x) => (--x) * x * x + 1)(elapsedRatio);
+			const currentAngle = angleFrom + (angleTo - angleFrom) * easedRatio;
+			flipPage.style.transform = `rotateY(${currentAngle}deg)`;
+			flipPage.style.boxShadow = (goForward && currentAngle < -90) || (!goForward && currentAngle > -90) ? '0 12px 30px rgba(0,0,0,0.32)' : '0 6px 24px rgba(0,0,0,0.25)';
+
+			// 🔥 Меняем контент на полпути (угол проходит 90°)
+			if (!contentSwapped && ((goForward && currentAngle < -90) || (!goForward && currentAngle > -90))) {
+				contentSwapped = true;
+				if (goForward) {
+					currentSpreadIndex = Math.min(totalSpreads - 1, currentSpreadIndex + 1);
+				} else {
+					currentSpreadIndex = Math.max(0, currentSpreadIndex - 1);
+				}
+				renderSpread(currentSpreadIndex);
+			}
+
+			if (currentTime - flipStartTime < flipDuration) {
+				flipAnimFrame = requestAnimationFrame(flipStep);
+			} else {
+				cancelAnimationFrame(flipAnimFrame);
+				flipAnimFrame = null;
+				// Сбрасываем flip-элемент
+				flipPage.style.left = '50%';
+				flipPage.style.right = '0';
+				flipPage.style.transformOrigin = 'left center';
+				flipPage.style.display = 'none';
+				flipPage.style.transform = 'rotateY(0deg)';
+				resetFlipElement();
+				flipAnimating = false;
+			}
+		}
+		flipAnimFrame = requestAnimationFrame(flipStep);
+	}
+
+    nextBtn.addEventListener('click', () => animateFlip(true));
+    prevBtn.addEventListener('click', () => animateFlip(false));
+
+    // Свайпы
+    let touchStartX = 0, touchStartY = 0, touchActive = false;
+    spread.addEventListener('touchstart', e => { if (!flipAnimating && !bookClosing && bookOpened) { const touch = e.touches[0]; touchStartX = touch.clientX; touchStartY = touch.clientY; touchActive = true; } }, { passive: true });
+    spread.addEventListener('touchmove', e => { if (touchActive && Math.abs(e.touches[0].clientX-touchStartX) > Math.abs(e.touches[0].clientY-touchStartY)) e.preventDefault(); }, { passive: false });
+    spread.addEventListener('touchend', e => { if (!touchActive) return; touchActive = false; const dx = e.changedTouches[0].clientX - touchStartX; if (dx < -40) animateFlip(true); else if (dx > 40) animateFlip(false); });
+    let mouseDown = false, mouseStartX = 0;
+    spread.addEventListener('mousedown', e => { if (!flipAnimating && !bookClosing && bookOpened) { mouseDown = true; mouseStartX = e.clientX; } });
+    window.addEventListener('mouseup', e => { if (!mouseDown) return; mouseDown = false; const dx = e.clientX - mouseStartX; if (dx < -60) animateFlip(true); else if (dx > 60) animateFlip(false); });
+    window.addEventListener('keydown', e => { if (bookOpened && !bookClosing) { if (e.key === 'ArrowRight') animateFlip(true); else if (e.key === 'ArrowLeft') animateFlip(false); } });
+
+// ==================== ФЕЙЕРВЕРКИ ====================
+function spawnFirework() {
+    const c = document.createElement('div');
+    c.className = 'firework-container';
+    c.style.left = (15 + Math.random() * 70) + 'vw';
+    c.style.top = (15 + Math.random() * 40) + 'vh';
+    c.style.zIndex = '60';
+    for (let i = 0; i < 10; i++) {
+        const f = document.createElement('div');
+        f.className = 'firework';
+        f.style.transform = `rotate(${i * 36}deg) translateY(-30px)`;
+        f.style.animationDelay = Math.random() * 0.3 + 's';
+        c.appendChild(f);
+    }
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1500);
+}
+
+	// ==================== АДАПТИВНОЕ ФОТО-СЕРДЦЕ (ИСПРАВЛЕНО) ====================
+	function getHeartPhotoConfig() {
+		const screenW = window.innerWidth;
+		const screenH = window.innerHeight;
+		const minDim = Math.min(screenW, screenH);
+		
+		// Размер карточки: меньше для маленьких экранов
+		let cardSize = Math.round(minDim * 0.13);
+		cardSize = Math.max(40, Math.min(120, cardSize));
+		
+		// Количество карточек
+		let totalCards = Math.round(minDim * 2.2 / (cardSize * 0.55));
+		totalCards = Math.max(14, Math.min(50, totalCards));
+		
+		// Масштаб сердца — теперь с запасом, чтобы влазило по высоте
+		// Максимальная высота сырого сердца ≈ 31 единица (от -17 до +14)
+		// Доступная высота = screenH * 0.8 (80% экрана)
+		const availableHeight = screenH * 0.75;
+		const heartScale = availableHeight / 31;  // Точно вписывается по высоте
+		
+		console.log(`💕 Heart config: ${totalCards} cards, ${cardSize}px, scale ${heartScale.toFixed(1)}`);
+		console.log(`   Screen: ${screenW}x${screenH}, minDim: ${minDim}, availH: ${availableHeight.toFixed(0)}`);
+		return { cardSize, totalCards, heartScale };
+	}
+
+	function createHeartPhoto(idx, total, url, config) {
+		const size = config.cardSize;
+		const halfSize = size / 2;
+		
+		const container = document.createElement('div');
+		container.className = 'heart-photo-container';
+		container.style.cssText = `
+			position: fixed !important;
+			pointer-events: none !important;
+			z-index: 999 !important;
+			width: ${size}px !important;
+			height: ${size}px !important;
+			background: rgba(255, 0, 100, 0.5) !important;
+			border: 2px solid rgba(255,255,255,0.6) !important;
+			border-radius: 6px !important;
+			transition: all 0.8s cubic-bezier(0.2, 0.9, 0.2, 1) !important;
+		`;
+		
+		const img = document.createElement('img');
+		img.src = url;
+		img.style.cssText = `
+			width: 100% !important;
+			height: 100% !important;
+			object-fit: cover !important;
+			border-radius: 4px !important;
+			display: block !important;
+		`;
+		
+		img.onerror = function() {
+			console.warn(`⚠️ Фото не загрузилось: ${url}`);
+			container.style.background = 'rgba(255, 0, 100, 0.8)';
+			container.innerHTML = '<span style="color:white;font-size:16px;display:flex;align-items:center;justify-content:center;height:100%;">💕</span>';
+		};
+		
+		container.appendChild(img);
+		
+		// Вычисляем позицию
+		const tVal = (idx / total) * 2 * Math.PI;
+		const rx = 16 * Math.pow(Math.sin(tVal), 3);
+		const ry = -(13 * Math.cos(tVal) - 5 * Math.cos(2 * tVal) - 2 * Math.cos(3 * tVal) - Math.cos(4 * tVal));
+		
+		const centerX = window.innerWidth / 2;
+		const centerY = window.innerHeight / 2;
+		const sc = config.heartScale;
+		
+		// Сырые координаты сердца (rx: -16..16, ry: -17..14)
+		// Сдвигаем Y вниз на 1.5 единицы, чтобы сердце было отцентрировано
+		const adjustedRY = ry - 1.5;
+		
+		const finalLeft = centerX + rx * sc - halfSize;
+		const finalTop = centerY + adjustedRY * sc - halfSize;
+		
+		// Старт из случайной точки вокруг центра
+		const startLeft = centerX - halfSize + (Math.random() - 0.5) * size * 4;
+		const startTop = centerY - halfSize + (Math.random() - 0.5) * size * 4;
+		
+		container.style.left = startLeft + 'px';
+		container.style.top = startTop + 'px';
+		container.style.transform = 'scale(0.2) rotate(' + (Math.random() * 40 - 20) + 'deg)';
+		container.style.opacity = '1';
+		
+		document.body.appendChild(container);
+		
+		if (idx === 0) {
+			console.log(`🔍 Card 0: start(${startLeft.toFixed(0)},${startTop.toFixed(0)}) → final(${finalLeft.toFixed(0)},${finalTop.toFixed(0)})`);
+			console.log(`   rx=${rx.toFixed(2)} ry=${ry.toFixed(2)} adjRY=${adjustedRY.toFixed(2)} sc=${sc.toFixed(1)}`);
+		}
+		
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				container.style.left = finalLeft + 'px';
+				container.style.top = finalTop + 'px';
+				container.style.transform = 'scale(1) rotate(' + (Math.random() * 5 - 2.5) + 'deg)';
+			});
+		});
+		
+		setTimeout(() => {
+			container.style.transition = 'opacity 0.5s ease';
+			container.style.opacity = '0';
+			setTimeout(() => {
+				if (container.parentNode) container.remove();
+			}, 500);
+		}, 12000);
+		
+		return container;
+	}
+
+	function finalPhotoHeartEffect() {
+		const urls = PHOTO_URLS.filter(u => u && u.length > 0);
+		if (!urls.length) {
+			console.warn('⚠️ Нет фото для сердца!');
+			return;
+		}
+		
+		document.querySelectorAll('.heart-photo-container, .heart-photo').forEach(el => el.remove());
+		
+		const config = getHeartPhotoConfig();
+		console.log(`🎆 Creating photo heart: ${config.totalCards} cards`);
+		
+		for (let i = 0; i < config.totalCards; i++) {
+			setTimeout(() => {
+				createHeartPhoto(i, config.totalCards, urls[i % urls.length], config);
+			}, i * 45);
+		}
+		
+		const fireInterval = setInterval(spawnFirework, 1500);
+		setTimeout(() => clearInterval(fireInterval), 13000);
+	}
+
+// ==================== ЗАКРЫТИЕ КНИГИ → ФИНАЛ ====================
+function closeBookToHeart() {
+    if (bookClosing) return;
+    bookClosing = true;
+    bookOpened = false;
+
+    console.log('📕 Закрываем книгу...');
+
+    const rect = bookShell.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const emojis = ['📄', '💕', '✨', '💖', '💗', '🌸', '🩷', '💝'];
+
+    bookSpreadContainer.classList.remove('visible');
+    controlsWrap.style.display = 'none';
+    closeBtn.style.display = 'none';
+    bookCover.classList.remove('opened');
+
+    const particleCount = window.innerWidth < 480 ? 20 : 35;
+    for (let i = 0; i < particleCount; i++) {
+        const p = document.createElement('span');
+        p.classList.add('closing-particle');
+        p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 80 + Math.random() * 250;
+        p.style.setProperty('--px', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--py', Math.sin(angle) * dist - 50 + 'px');
+        p.style.animationDuration = (1 + Math.random() * 1.2) + 's';
+        p.style.zIndex = '50';
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 2500);
+    }
+
+    setTimeout(() => {
+        bookStage.classList.remove('visible');
+        matrixCanvas.style.opacity = '0.06';
+        console.log('💕 Запускаем финальное сердце...');
+        finalPhotoHeartEffect();
+        bookClosing = false;
+    }, 800);
+}
+
+// Назначаем обработчик
+closeBtn.addEventListener('click', closeBookToHeart);
+
+// ==================== ГЛАВНЫЙ ЦИКЛ ====================
+	
+    function animate(timestamp) {
+        if (!allSystemsGo) { requestAnimationFrame(animate); return; }
+        ctx.clearRect(0, 0, width, height);
+        if (currentState === STATE.COUNTDOWN) {
+            const elapsed = timestamp - countdownStartTime;
+            if (elapsed > COUNTDOWN_DURATION && countdownNumber > 1) { countdownNumber--; countdownStartTime = timestamp; setDotsTargetToNumber(countdownNumber); }
+            else if (elapsed > COUNTDOWN_DURATION && countdownNumber === 1) startHeartFormation();
+        }
+        if (currentState === STATE.HEART && timestamp - heartFormTime > HEART_FORM_DURATION && !bookReady) showBook();
+        for (let dot of dots) {
+            if (currentState === STATE.RAIN) { dot.y += dot.speed; if (dot.y > height+20) { dot.y = -20; dot.x = Math.random()*width; } }
+            else { dot.x += (dot.targetX-dot.x)*dot.lerpFactor; dot.y += (dot.targetY-dot.y)*dot.lerpFactor;
+                if (Math.abs(dot.x-dot.targetX)<1.5 && Math.abs(dot.y-dot.targetY)<1.5) { dot.x += (Math.random()-0.5)*0.4; dot.y += (Math.random()-0.5)*0.4; } }
+            const alpha = dot.opacity;
+            ctx.fillStyle = (currentState===STATE.HEART||currentState===STATE.COUNTDOWN) ? `rgba(255,107,157,${alpha})` : `rgba(255,180,210,${alpha})`;
+            ctx.beginPath(); ctx.arc(dot.x, dot.y, dot.size, 0, Math.PI*2); ctx.fill();
+            if (currentState===STATE.HEART||currentState===STATE.COUNTDOWN) { ctx.fillStyle = `rgba(255,150,200,${alpha*0.25})`; ctx.beginPath(); ctx.arc(dot.x, dot.y, dot.size*3, 0, Math.PI*2); ctx.fill(); }
+        }
+        requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+    renderSpread(currentSpreadIndex);
+</script>
+</body>
+</html>
