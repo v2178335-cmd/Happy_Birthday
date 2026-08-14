@@ -1,0 +1,495 @@
+@import url(https://fonts.googleapis.com/css?family=Lato:300italic);
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100vh;
+  background: #fdcae1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Lato", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: background-color 0.8s ease;
+  overflow-x: hidden;
+}
+
+/* ===== ЭКРАН ВЫБОРА ЦВЕТА ===== */
+.color-selector {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(253, 202, 225, 0.92);
+  backdrop-filter: blur(20px);
+  z-index: 1000;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.color-selector.fade-out {
+  opacity: 0;
+  transform: scale(1.05);
+  pointer-events: none;
+}
+
+.selector-content {
+  text-align: center;
+  padding: 40px 30px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.selector-content h2 {
+  font-size: 2.2rem;
+  color: #8b6a60;
+  font-weight: 300;
+  margin-bottom: 8px;
+}
+
+.selector-content .subtitle {
+  font-size: 1.1rem;
+  color: #a88679;
+  margin-bottom: 30px;
+  font-style: italic;
+}
+
+/* ===== КРУГЛЫЕ КНОПКИ ВЫБОРА ЦВЕТА ===== */
+.color-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px 18px; /* Увеличен вертикальный отступ между рядами */
+  margin-bottom: 30px;
+}
+
+.color-option {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.color-option .emoji {
+  font-size: 2.2rem;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.color-option:hover {
+  transform: scale(1.12) translateY(-4px);
+  border-color: #fff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+.color-option:hover .emoji {
+  transform: scale(1.1);
+}
+
+.color-option.active {
+  border-color: #8b6a60;
+  transform: scale(1.15);
+  box-shadow: 0 8px 40px rgba(139, 106, 96, 0.35);
+}
+
+/* ===== ПОДСКАЗКИ ДЛЯ КНОПОК ===== */
+.color-option::before {
+  content: attr(data-label);
+  position: absolute;
+  bottom: -28px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.8);
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  padding: 3px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-family: "Lato", sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  transition: all 0.3s ease;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* Для первых трёх кнопок (верхний ряд) - подсказка сверху */
+.color-option:nth-child(-n+3)::before {
+  bottom: auto;
+  top: -28px;
+}
+
+/* Для остальных кнопок (нижний ряд) - подсказка снизу */
+.color-option:nth-child(n+4)::before {
+  bottom: -28px;
+  top: auto;
+}
+
+.color-option:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* ===== ГАЛОЧКА ДЛЯ ВЫБРАННОГО ТОРТА ===== */
+.color-option.active::after {
+  content: '✓';
+  position: absolute;
+  bottom: -6px;
+  right: -6px;
+  width: 28px;
+  height: 28px;
+  background: #8b6a60;
+  border-radius: 50%;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 101;
+}
+
+/* Для первых трёх кнопок (верхний ряд) - галочка сверху */
+.color-option:nth-child(-n+3).active::after {
+  bottom: auto;
+  top: -6px;
+  right: -6px;
+}
+
+/* Для остальных кнопок (нижний ряд) - галочка снизу */
+.color-option:nth-child(n+4).active::after {
+  bottom: -6px;
+  top: auto;
+  right: -6px;
+}
+
+/* ===== ПОЗДРАВЛЕНИЕ (СКРЫТОЕ) ===== */
+.birthday-message {
+  position: absolute;
+  margin-top: 100px;
+  top: 8px; /* Позиционируем над тортом */
+  left: 50%;
+  transform: translateX(-50%) scale(0.5);
+  text-align: center;
+  color: #8b6a60;
+  font-weight: 300;
+  font-style: italic;
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  z-index: 20;
+  width: 500px; /* Фиксированная ширина */
+  max-width: 90vw;
+}
+
+.birthday-message:not(.hidden) {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  animation: message-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.birthday-message.hidden {
+  display: none;
+}
+
+.birthday-message h1 {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.birthday-message p {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  opacity: 0.85;
+  line-height: 1.6;
+}
+
+@keyframes message-pop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
+/* ===== ОСНОВНАЯ ОТКРЫТКА ===== */
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 500px;
+  padding: 20px 10px;
+}
+
+.card.hidden {
+  display: none;
+}
+
+.cake-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 200px;
+  aspect-ratio: 200 / 500;
+  margin: 0 auto;
+}
+
+#cake {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* ===== КНОПКА "ЗАДУТЬ СВЕЧИ" ===== */
+.blow-btn {
+  position: absolute;
+  bottom: 450px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 32px;
+  font-size: 1.1rem;
+  font-family: "Lato", sans-serif;
+  font-weight: 600;
+  color: #5a4a40;
+  background: linear-gradient(135deg, #fff8f0, #f5ede8);
+  border: 2px solid rgba(139, 106, 96, 0.3);
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.blow-btn:not(.hidden) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.blow-btn:hover:not(.hidden) {
+  transform: translateX(-50%) translateY(-3px) scale(1.05);
+  border-color: #8b6a60;
+  box-shadow: 0 8px 40px rgba(139, 106, 96, 0.2);
+  background: linear-gradient(135deg, #fff8f0, #f0e4d8);
+}
+
+.blow-btn:active:not(.hidden) {
+  transform: translateX(-50%) translateY(0px) scale(0.95);
+}
+
+.blow-btn.hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-50%) scale(0.9) !important;
+}
+
+/* ===== КОНФЕТТИ ===== */
+.confetti {
+  position: fixed;
+  top: -20px;
+  z-index: 1000;
+  pointer-events: none;
+  animation: confetti-fall 3s ease-in forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+
+/* ===== АДАПТИВНОСТЬ ===== */
+@media (max-width: 500px) {
+  .color-options {
+    gap: 25px 14px; /* Увеличен вертикальный отступ */
+  }
+  
+  .color-option {
+    width: 64px;
+    height: 64px;
+  }
+  
+  .color-option .emoji {
+    font-size: 1.8rem;
+  }
+  
+  .selector-content h2 {
+    font-size: 1.6rem;
+  }
+  
+  .selector-content .subtitle {
+    font-size: 1rem;
+  }
+  
+  .color-option.active::after {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+  
+  /* Корректировка позиций для мобильных */
+  .color-option:nth-child(-n+3)::before {
+    top: -25px;
+  }
+  
+  .color-option:nth-child(n+4)::before {
+    bottom: -25px;
+  }
+  
+  .color-option:nth-child(-n+3).active::after {
+    top: -4px;
+    right: -4px;
+  }
+  
+  .color-option:nth-child(n+4).active::after {
+    bottom: -4px;
+    right: -4px;
+  }
+  
+  .blow-btn {
+    font-size: 0.9rem;
+    padding: 10px 24px;
+    bottom: 155px;
+  }
+  
+  .birthday-message {
+    top: -40px;
+    width: 350px;
+  }
+}
+
+@media (max-width: 400px) {
+  .cake-wrapper {
+    max-width: 150px;
+  }
+  
+  .color-options {
+    gap: 22px 10px; /* Увеличен вертикальный отступ */
+  }
+  
+  .color-option {
+    width: 54px;
+    height: 54px;
+  }
+  
+  .color-option .emoji {
+    font-size: 1.4rem;
+  }
+  
+  .selector-content h2 {
+    font-size: 1.3rem;
+  }
+  
+  .color-option.active::after {
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+  
+  /* Корректировка позиций для маленьких экранов */
+  .color-option:nth-child(-n+3)::before {
+    top: -22px;
+  }
+  
+  .color-option:nth-child(n+4)::before {
+    bottom: -22px;
+  }
+  
+  .color-option:nth-child(-n+3).active::after {
+    top: -3px;
+    right: -3px;
+  }
+  
+  .color-option:nth-child(n+4).active::after {
+    bottom: -3px;
+    right: -3px;
+  }
+  
+  .blow-btn {
+    font-size: 0.8rem;
+    padding: 8px 18px;
+    bottom: 265px;
+  }
+  
+  .birthday-message {
+    top: -40px;
+    width: 300px;
+  }
+}
+
+@media (min-width: 768px) {
+  .cake-wrapper {
+    max-width: 240px;
+  }
+  
+  .color-option {
+    width: 96px;
+    height: 96px;
+  }
+  
+  .color-option .emoji {
+    font-size: 2.8rem;
+  }
+  
+  .color-options {
+    gap: 35px 20px; /* Увеличен вертикальный отступ */
+  }
+  
+  /* Корректировка позиций для больших экранов */
+  .color-option:nth-child(-n+3)::before {
+    top: -32px;
+  }
+  
+  .color-option:nth-child(n+4)::before {
+    bottom: -32px;
+  }
+  
+  .color-option:nth-child(-n+3).active::after {
+    top: -8px;
+    right: -8px;
+  }
+  
+  .color-option:nth-child(n+4).active::after {
+    bottom: -8px;
+    right: -8px;
+  }
+  
+  .blow-btn {
+    font-size: 1.3rem;
+    padding: 14px 40px;
+  }
+  
+  .birthday-message {
+    top: -100px;
+    width: 400px;
+  }
+}
