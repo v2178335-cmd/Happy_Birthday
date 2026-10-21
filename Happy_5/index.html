@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>С днём рождения!</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0a; font-family: 'Helvetica Neue', Arial, sans-serif; height: 100vh; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+
+        .stage { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        
+        .layer-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; transition: all 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); z-index: 0; }
+        .layer-bg.active { filter: blur(0px) brightness(0.6); }
+
+        .layer-content { position: relative; z-index: 1; max-width: 700px; text-align: center; color: #fff; padding: 20px; opacity: 0; transform: translateY(30px); transition: all 1.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .layer-content.active { opacity: 1; transform: translateY(0); }
+
+        .layer-image { width: 160px; height: 160px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 70px; margin: 0 auto 20px; border: 3px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); flex-shrink: 0; }
+        .layer-text { font-size: clamp(18px, 2.5vw, 30px); font-weight: 300; line-height: 1.5; color: rgba(255,255,255,0.9); margin-bottom: 15px; }
+        .layer-subtext { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; }
+
+        /* КОНТЕЙНЕР ДЛЯ КНОПОК */
+        .button-container {
+            position: absolute;
+            bottom: 12vh;  /* Отступ зависит от высоты экрана */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+        }
+
+        .nav-btn {
+            padding: 14px 40px;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.6);
+            font-size: 13px;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.6s ease;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .nav-btn:hover { border-color: rgba(255,255,255,0.4); color: #fff; background: rgba(255,255,255,0.03); }
+        .nav-btn.hidden { display: none; }
+
+        /* Кнопка перехода на машину */
+        .go-car-btn { 
+            padding: 14px 40px;
+            background: rgba(255, 215, 0, 0.15);
+            border: 2px solid #ffd700; 
+            color: #ffd700;
+            font-size: 16px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            border-radius: 50px; 
+            display: none;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .go-car-btn:hover { background: rgba(255, 215, 0, 0.25); box-shadow: 0 0 30px rgba(255, 215, 0, 0.2); transform: scale(1.05); }
+        .go-car-btn.visible { display: block; }
+
+        .progress { position: absolute; bottom: 5vh; left: 50%; transform: translateX(-50%); z-index: 3; display: flex; gap: 8px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.1); transition: 0.4s; }
+        .dot.active { background: rgba(255,255,255,0.6); box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+        .dot.done { background: rgba(255,255,255,0.3); }
+
+        /* ===== АДАПТАЦИЯ ПОД МАЛЕНЬКИЕ ЭКРАНЫ ===== */
+        
+        /* Планшеты и маленькие ноутбуки */
+        @media (max-height: 600px) {
+            .layer-image { width: 100px; height: 100px; font-size: 45px; margin-bottom: 10px; }
+            .layer-text { font-size: 16px; margin-bottom: 8px; }
+            .layer-subtext { font-size: 10px; }
+            .button-container { bottom: 8vh; }
+            .nav-btn { padding: 10px 25px; font-size: 11px; }
+            .go-car-btn { padding: 10px 30px; font-size: 14px; }
+            .progress { bottom: 3vh; }
+        }
+
+        /* Телефоны и экстремально маленькие экраны */
+        @media (max-height: 400px) {
+            .layer-image { width: 70px; height: 70px; font-size: 35px; margin-bottom: 8px; border-width: 2px; }
+            .layer-text { font-size: 14px; line-height: 1.3; }
+            .layer-subtext { font-size: 10px; line-height: 1.3; } /* Уменьшаем подтекст */
+            .button-container { bottom: 6vh; }
+            .nav-btn { padding: 8px 20px; font-size: 10px; letter-spacing: 2px; }
+            .go-car-btn { padding: 8px 25px; font-size: 13px; letter-spacing: 1px; }
+            .progress {bottom: 1vh; } /* Уменьшаем точки прогресса */
+        }
+        
+        @media (max-width: 400px) {
+            .layer-text { font-size: 15px; }
+            .layer-image { width: 120px; height: 120px; font-size: 55px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stage">
+        <div class="layer-bg" id="layerBg" style="background: linear-gradient(135deg, #1a1a3e, #2a1a3e);"></div>
+        <div class="layer-content" id="layerContent">
+            <div class="layer-image" id="layerImage">🎂</div>
+            <div class="layer-text" id="layerText"></div>
+            <div class="layer-subtext" id="layerSubtext"></div>
+        </div>
+
+        <!-- КНОПКИ ТЕПЕРЬ В ОДНОМ КОНТЕЙНЕРЕ -->
+        <div class="button-container">
+            <button class="nav-btn" id="navBtn">Дальше →</button>
+            <a href="car.html" class="go-car-btn" id="goCarBtn">Кнопка</a>
+        </div>
+
+        <div class="progress" id="progress"></div>
+    </div>
+
+    <script>
+		const story = [
+			{ 
+				emoji: '👋', 
+				text: 'Приветствую', 
+				subtext: 'Что ж, как ни странно, настал этот день.', 
+				bg: 'linear-gradient(135deg, #1a1a3e, #2a1a3e)' 
+			},
+			{ 
+				emoji: '🌅', 
+				text: 'Желать и говорить красиво я, конечно, не умею.', 
+				subtext: 'Но всё равно хочу пожелать...', 
+				bg: 'linear-gradient(135deg, #1a2a3e, #2a1a2e)' 
+			},
+			{ 
+				emoji: '🤝', 
+				text: 'Здоровья, счастья, денег и исполнения задуманных планов.', 
+				subtext: 'Хоть это и банально, но зато от души.', 
+				bg: 'linear-gradient(135deg, #2a1a3e, #1a1a2e)' 
+			},
+			{ 
+				emoji: '🍻', 
+				text: 'Короче, будь счастлив. И это не пожелание, а указание.', 
+				subtext: 'Шутка. Или нет.', 
+				bg: 'linear-gradient(135deg, #1a2a2e, #2a1a1e)' 
+			},
+			{ 
+				emoji: '🎂', 
+				text: 'С днём рождения! 🎉', 
+				subtext: 'Жми на кнопку', 
+				bg: 'linear-gradient(135deg, #3e2a1a, #2a1a3e)' 
+			}
+		];
+
+        let current = 0;
+        const total = story.length;
+        const layerBg = document.getElementById('layerBg');
+        const layerContent = document.getElementById('layerContent');
+        const layerImage = document.getElementById('layerImage');
+        const layerText = document.getElementById('layerText');
+        const layerSubtext = document.getElementById('layerSubtext');
+        const navBtn = document.getElementById('navBtn');
+        const goCarBtn = document.getElementById('goCarBtn');
+        const progress = document.getElementById('progress');
+
+        for (let i = 0; i < total; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${i}`;
+            progress.appendChild(dot);
+        }
+
+        function goTo(index) {
+            const data = story[index];
+            layerBg.style.background = data.bg;
+            layerBg.classList.remove('active');
+            setTimeout(() => layerBg.classList.add('active'), 50);
+
+            layerContent.classList.remove('active');
+            setTimeout(() => {
+                layerImage.textContent = data.emoji;
+                layerText.textContent = data.text;
+                layerSubtext.textContent = data.subtext;
+                layerContent.classList.add('active');
+            }, 200);
+
+            document.querySelectorAll('.dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'done');
+                if (i < index) dot.classList.add('done');
+                if (i === index) dot.classList.add('active');
+            });
+
+            // Показываем кнопку "Поехали!" на последнем слайде
+            if (index === total - 1) {
+                navBtn.classList.add('hidden');
+                goCarBtn.classList.add('visible');
+            } else {
+                navBtn.classList.remove('hidden');
+                goCarBtn.classList.remove('visible');
+                navBtn.textContent = 'Дальше →';
+            }
+        }
+
+        navBtn.addEventListener('click', () => {
+            if (current < total - 1) {
+                current++;
+                goTo(current);
+            }
+        });
+
+        goTo(0);
+    </script>
+</body>
+</html>
