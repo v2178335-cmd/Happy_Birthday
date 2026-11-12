@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Мастерская поздравлений 🎉</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#14101f radial-gradient(circle at 50% -60px,#4b2a6b,#14101f 65%) fixed;color:#fff;font-family:"Caveat",cursive;min-height:100vh;display:flex;justify-content:center;padding:22px 14px 40px}
+#wrap{width:100%;max-width:520px}
+h1{font-family:"Press Start 2P",monospace;font-size:19px;line-height:1.6;text-align:center;color:#ffd25e;text-shadow:2px 0 0 #7a2e12,0 2px 0 #7a2e12,-2px 0 0 #7a2e12,0 -2px 0 #7a2e12;margin-bottom:6px}
+#sub{text-align:center;font-size:22px;color:#ffb3d9;margin-bottom:16px}
+#nameBox{background:#ffffff14;border:2px solid #ffffff2e;border-radius:14px;padding:10px 14px;margin-bottom:16px;text-align:center}
+#nameBox label{font-size:20px;color:#ffe9a8;display:block;margin-bottom:6px}
+#nameInput{font-family:"Caveat",cursive;font-size:22px;font-weight:700;text-align:center;color:#3a1c4d;background:#fff6e8;border:2px solid #a13a68;border-radius:12px;padding:4px 12px;width:100%;max-width:260px;outline:none}
+.card{display:flex;gap:12px;align-items:center;background:#ffffff10;border:2px solid #ffffff26;border-radius:16px;padding:12px 14px;margin-bottom:12px;color:#fff;text-decoration:none;transition:transform .12s,border-color .12s,background .12s;position:relative}
+.card:active{transform:scale(.97)}
+.card:hover{border-color:#ffd25e;background:#ffffff1c}
+.emoji{font-size:38px;line-height:1;flex:0 0 auto;filter:drop-shadow(0 3px 0 #000)}
+.ttl{font-family:"Press Start 2P",monospace;font-size:12px;line-height:1.6;color:#ffd25e;margin-bottom:4px}
+.dsc{font-size:20px;line-height:1.25;color:#e8ddff}
+.badge{position:absolute;top:-10px;right:10px;font-family:"Press Start 2P",monospace;font-size:9px;background:#e23a6b;color:#fff;padding:5px 9px;border-radius:10px;box-shadow:0 2px 0 #7a1a40;transform:rotate(4deg)}
+.arrow{margin-left:auto;font-size:22px;color:#ffd25e;flex:0 0 auto}
+#foot{text-align:center;font-size:20px;color:#ffffff90;margin-top:18px}
+#apiStatus{text-align:center;font-size:16px;color:#ffffff60;margin-top:6px;font-family:"Caveat",cursive}
+#loading{text-align:center;font-size:22px;color:#ffe9a8;padding:20px}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>🎉 МАСТЕРСКАЯ<br>ПОЗДРАВЛЕНИЙ 🎉</h1>
+  <div id="sub">каждая открытка сделана для конкретного человека.<br>вот примеры работ:</div>
+  <div id="nameBox">
+    <label for="nameInput">попробуй живьём — впиши имя, и торт 🎂 обратится лично:</label>
+    <input id="nameInput" maxlength="12" placeholder="например, Дима">
+  </div>
+  <div id="cards"><div id="loading">загружаю витрину… ✨</div></div>
+  <div id="foot">понравилось? сделаю такую и тебе 💌</div>
+  <div id="apiStatus"></div>
+</div>
+<script>
+const OWNER = "v2178335-cmd", REPO = "Happy_Birthday";
+const BASE = "https://" + OWNER + ".github.io/" + REPO + "/";
+// Описанные проекты. Чтобы оформить новый проект: добавь сюда папку —
+// плашка NEW с неё снимется сама. Чтобы вернуть NEW старому — добавь isNew:true.
+const KNOWN = {
+  Happy_6: {e:"🎂", t:"ТОРТ ДЛЯ БРАТА", d:"фонтаны, салют, 4 подарка, шарики, гирлянда и музыка-шкатулка", entry:"Happy_6/birthday", name:true, isNew:true},
+  Happy_2: {e:"🌌", t:"ВЫБОР ВСЕЛЕННОЙ", d:"4 темы: киберпанк, RDR 2, ведьмак и Resident Evil", entry:"Happy_2/"},
+  Happy_5: {e:"🚗", t:"ВАЗ-2107 В ПОДАРОК", d:"интерактивный 3D-гараж: двери, капот, двигатель, фары", entry:"Happy_5/"},
+  Happy_3: {e:"🥠", t:"ПЕЧЕНЬКИ С ПРЕДСКАЗАНИЯМИ", d:"17 печенек — открывай и читай пожелания", entry:"Happy_3/20260424_dba17d.html"},
+  Happy_4: {e:"💻", t:"ТЕРМИНАЛ", d:"секретный доступ к поздравлению по дате рождения", entry:"Happy_4/Happy_terminal.html"},
+  Happy:   {e:"📖", t:"КНИЖКА ДЛЯ D", d:"трогательная история на 6 страниц", entry:"Happy/20260710.html"},
+  Happy_1: {e:"✨", t:"КЛАССИКА С КОНФЕТТИ", d:"простое и яркое «С Днём Рождения!»", entry:"Happy_1/Happy.html"},
+  Happy_7: {e:"🌙", t:"ЗВЁЗДНАЯ НОЧЬ", d:"мерцающие звёзды, вспышки и пожелания от луны", entry:"Happy_7/happy7.html", name:true, isNew:true},
+};
+const ORDER = ["Happy_7","Happy_6","Happy_2","Happy_5","Happy_3","Happy_4","Happy","Happy_1"];
+const box = document.getElementById('cards');
+const nameInput = document.getElementById('nameInput');
+
+function pretty(n){ return n.replace(/_/g," ").replace(/^\w/, c=>c.toUpperCase()); }
+
+async function findEntry(dir){
+  try{
+    const r = await fetch("https://api.github.com/" + OWNER + "/" + REPO + "/contents/" + dir, {cache:"no-store"});
+    if(!r.ok) throw 0;
+    const items = await r.json();
+    const idx = items.find(i=>i.type==="file" && /^index\.html?$/i.test(i.name));
+    const any = items.find(i=>i.type==="file" && /\.html?$/i.test(i.name));
+    if(idx || any) return dir + "/" + (idx ? idx.name : any.name);
+  }catch(e){}
+  return dir + "/";
+}
+
+// Запасной путь, если API гитхаба не отвечает: известные + прощупывание серии Happy_1..Happy_40.
+// Условие: новый проект лежит как Happy_N/index.html — тогда ссылка сразу рабочая.
+async function probeSeries(){
+  const found = [];
+  const jobs = [];
+  for(let n=1;n<=40;n++){
+    const d = "Happy_" + n;
+    if(KNOWN[d]) continue;
+    jobs.push(
+      fetch(BASE + d + "/index.html", {cache:"no-store", method:"HEAD"})
+        .then(r=>{ if(r.ok) found.push({dir:d, entry:d + "/index.html"}); })
+        .catch(()=>{})
+    );
+  }
+  await Promise.all(jobs);
+  return found;
+}
+
+function cardEl(meta, url){
+  const a = document.createElement('a');
+  a.className = 'card';
+  a.href = url;
+  a.innerHTML = '<div class="emoji">'+meta.e+'</div><div><div class="ttl">'+meta.t+'</div><div class="dsc">'+meta.d+'</div></div><div class="arrow">›</div>'
+    + (meta.isNew ? '<div class="badge">NEW ★</div>' : '');
+  return a;
+}
+
+async function buildHub(dirs, extra){
+  box.innerHTML = "";
+  const nm = nameInput.value.trim().slice(0,12);
+  const known = dirs.filter(d=>KNOWN[d]);
+  const fresh = dirs.filter(d=>!KNOWN[d]);
+  // сначала новинки, потом описанные по порядку
+  for(const d of fresh){
+    const entry = (extra && extra[d]) || await findEntry(d);
+    box.appendChild(cardEl(
+      {e:"🎁", t:pretty(d), d:"новая работа — загляни!", isNew:true},
+      BASE + entry
+    ));
+  }
+  const ordered = ORDER.filter(o=>known.includes(o)).concat(known.filter(k=>!ORDER.includes(k)));
+  for(const d of ordered){
+    const m = KNOWN[d];
+    let url = BASE + m.entry;
+    if(m.name && nm) url += "?name=" + encodeURIComponent(nm);
+    box.appendChild(cardEl(m, url));
+  }
+}
+
+async function boot(){
+  const st = document.getElementById('apiStatus');
+  let dirs = null, extra = null, how = "";
+  try{
+    const r = await fetch("https://api.github.com/" + OWNER + "/" + REPO + "/contents/", {cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP " + r.status);
+    const items = await r.json();
+    dirs = items.filter(i=>i.type==="dir").map(i=>i.name);
+    how = "каталог GitHub";
+  }catch(e){
+    // API молчит (бывает!) — известные + прощупывание серии Happy_N
+    const probed = await probeSeries();
+    extra = {};
+    probed.forEach(p=>{ extra[p.dir] = p.entry; });
+    dirs = [...new Set([...Object.keys(KNOWN), ...probed.map(p=>p.dir)])];
+    how = "запасной опрос (" + (e.message || e) + ")";
+  }
+  st.textContent = how + ": проектов — " + dirs.length;
+  await buildHub(dirs, extra);
+}
+nameInput.addEventListener('input', boot);
+boot();
+</script>
+</body>
+</html>
