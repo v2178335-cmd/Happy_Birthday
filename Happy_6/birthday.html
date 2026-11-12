@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>С Днём Рождения! 🎂</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  html,body{height:100%}
+  body{margin:0;height:100vh;height:100dvh;background:#170f24;color:#dfe6ff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",Arial,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;overscroll-behavior:none}
+  #wrap{width:100%;height:100vh;height:100dvh;padding:0;box-sizing:border-box}
+  #frame{position:relative;line-height:0;width:100vw;height:100vh;height:100dvh}
+  #cv{width:100vw;height:100vh;height:100dvh;display:block;image-rendering:pixelated;image-rendering:crisp-edges;background:#2a2358;cursor:pointer;touch-action:none}
+  #greetBox{position:absolute;top:8%;left:0;right:0;text-align:center;pointer-events:none;padding:0 10px}
+  #greet{font-family:"Press Start 2P",ui-monospace,monospace;font-size:24px;line-height:1.4;letter-spacing:0;color:#ff9ec7;text-shadow:2px 0 0 #a13a68,0 2px 0 #a13a68,-2px 0 0 #a13a68,0 -2px 0 #a13a68,2px 2px 0 #a13a68}
+  #sub{margin-top:12px;font-family:"Press Start 2P",ui-monospace,monospace;font-size:11px;line-height:1.6;color:#ffd25e;text-shadow:1px 0 0 #7a4a1a,0 1px 0 #7a4a1a,-1px 0 0 #7a4a1a,0 -1px 0 #7a4a1a,1px 1px 0 #7a4a1a}
+  #hint{position:absolute;left:0;right:0;bottom:10px;text-align:center;font-size:12px;line-height:1.5;color:#eaffea;opacity:.85;pointer-events:none;text-shadow:0 2px 0 #000}
+  #note{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,8,20,.55)}
+  #note[hidden]{display:none}
+  #noteCard{max-width:min(86vw,340px);background:#fff6e8;color:#4a2c17;font-family:"Caveat",cursive;font-size:22px;font-weight:500;line-height:1.45;padding:14px 16px 12px;border:3px solid #a13a68;box-shadow:0 0 0 3px #ffd25e,0 8px 30px #000;white-space:pre-line}
+  #noteClose{margin-top:10px;font-family:"Caveat",cursive;font-size:19px;font-weight:700;padding:4px 18px;border:0;border-radius:20px;background:#a13a68;color:#fff;cursor:pointer}
+  #intro{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(20,8,20,.62);padding:16px;box-sizing:border-box}
+  #intro[hidden]{display:none}
+  #introCard{max-width:min(88vw,350px);background:#fff6e8;color:#4a2c17;border:3px solid #a13a68;box-shadow:0 0 0 3px #ffd25e,0 8px 30px #000;padding:18px 18px 16px;text-align:center}
+  #introTitle{font-family:"Press Start 2P",ui-monospace,monospace;font-size:20px;line-height:1.5;color:#c22e63;margin-bottom:12px}
+  #introList{font-family:"Caveat",cursive;font-size:21px;font-weight:500;line-height:1.5;text-align:left;margin:0 0 14px 6px}
+  #introBtn{font-family:"Press Start 2P",ui-monospace,monospace;font-size:14px;padding:12px 18px;border:0;border-radius:24px;background:#c22e63;color:#fff;cursor:pointer;box-shadow:0 4px 0 #7a1a40}
+  #introBtn:active{transform:translateY(2px);box-shadow:0 2px 0 #7a1a40}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="frame">
+    <canvas id="cv" width="168" height="240"></canvas>
+    <div id="greetBox"><div id="greet">С ДНЁМ<br>РОЖДЕНИЯ!</div><div id="sub">★ ЛУЧШЕМУ БРАТУ ★</div></div>
+    <div id="hint">салют — небо 🎆 • свечи — торт 🎂 • подарки 🎁 • гирлянда 🎏</div>
+    <div id="note" hidden><div id="noteCard"><div id="noteText"></div><button id="noteClose">закрыть ✖</button></div></div>
+    <div id="intro"><div id="introCard">
+      <div id="introTitle">С ДНЁМ<br>РОЖДЕНИЯ! 🎂</div>
+      <div id="introList">Тапай по всему — тут всё живое:<br>🎆 небо — салют<br>🎂 торт — задуть свечи<br>🎁 подарки — открыть пожелания<br>🎈 шарики — лопнуть<br>🎏 гирлянда — дёрнуть</div>
+      <button id="introBtn">Зажечь праздник! 🎉</button>
+    </div></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+let W = cv.width; const H = cv.height;
+const hintEl = document.getElementById('hint');
+const subEl = document.getElementById('sub');
+// ?name=Игорь — подставить имя в посвящение
+const qp = new URLSearchParams(location.search);
+const NAME = (qp.get('name')||'').replace(/[<>&"]/g,'').slice(0,12);
+if(NAME && subEl) subEl.textContent = '★ ЛУЧШЕМУ БРАТУ, ' + NAME + ' ★';
+const GIFTS = [
+  {w:14,h:11,box:'#e63956',rib:'#ffd25e',wish:'Братишка, с днём рождения! 🎉\n\nЗдоровья богатырского, денег — чемодан, верных друзей рядом и удачи во всём.\n\nГоржусь, что ты мой брат! 🍻'},
+  {w:12,h:9,box:'#3f7ed6',rib:'#ffd9ec',wish:'Пусть всё задуманное получается с первого раза 🥂\n\nА если со второго — то с размахом!\n\nОбнимаю, брат!'},
+  {w:13,h:10,box:'#2fa36b',rib:'#fff3d6',wish:'Желаю, чтобы мотор никогда не глох 🔥\n\nНи у машины, ни у тебя самого.\n\nТолько вперёд, братишка!'},
+  {w:12,h:9,box:'#8a4fd6',rib:'#ffd25e',wish:'Спасибо, что ты есть ❤️\n\n«Лучший брат» — это не звание. Это ты.\n\nС праздником!'},
+];
+const GGAP = 6;
+const noteEl = document.getElementById('note');
+const noteText = document.getElementById('noteText');
+document.getElementById('noteClose').addEventListener('click', e=>{ e.stopPropagation(); noteEl.hidden = true; });
+document.getElementById('introBtn').addEventListener('click', ()=>{
+  document.getElementById('intro').hidden = true;
+  ensureAudio();
+  startMusic();
+  try{ if(AC && AC.state==='suspended') AC.resume(); }catch(e){}
+});
+const DEFAUTHINT = 'салют — небо 🎆 • свечи — торт 🎂 • подарки 🎁 • гирлянда 🎏';
+let seed = 1234567;
+function rnd(){ seed = (seed*1664525 + 1013904223) >>> 0; return seed/4294967296; }
+
+const GROUND_Y = H - 38;
+let TABLE_X = W/2, TABLE_TOP = GROUND_Y - 34;
+
+let stars, fireflies, rockets, parts, smokes, lit, time, autoT, muted, birds, balloons, giftsOpened, garland;
+
+function makeStars(){
+  stars = [];
+  for(let i=0;i<50;i++) stars.push({x: rnd()*W, y: rnd()*80, p: rnd()*Math.PI*2, s: rnd()<0.2?2:1});
+}
+function makeFireflies(){
+  fireflies = [];
+  for(let i=0;i<7;i++) fireflies.push({x: 10+rnd()*(W-20), y: 40+rnd()*110, p: rnd()*6.28, sp: .4+rnd()*.8});
+}
+function resetBalloons(){
+  balloons = [
+    {fx:.12, fy:92, s:1, c:0, alive:true, t:0, x:0, y:0},
+    {fx:.88, fy:78, s:1, c:1, alive:true, t:0, x:0, y:0},
+    {fx:.77, fy:112, s:.8, c:2, alive:true, t:0, x:0, y:0},
+  ];
+}
+function reset(){
+  seed = (Math.random()*1e9)|0;
+  rockets = []; parts = []; smokes = [];
+  lit = [true, true, true];
+  time = 0; autoT = 1.5;
+  hintEl.textContent = DEFAUTHINT;
+  makeStars(); makeFireflies(); resetBalloons();
+  giftsOpened = GIFTS.map(()=>false); noteEl.hidden = true;
+  birds = [];
+  for(let i=0;i<3;i++) birds.push({x: rnd()*W, y: 46+rnd()*36, sp: .12+rnd()*.12, p: rnd()*6.28});
+}
+function fit(){
+  const aspect = window.innerWidth/Math.max(1, window.innerHeight);
+  const w = Math.max(110, Math.min(480, Math.round(H*aspect)));
+  if(w!==W){
+    W = w; cv.width = w;
+    TABLE_X = W/2; TABLE_TOP = GROUND_Y - 34;
+    makeStars();
+  }
+}
+window.addEventListener('resize', fit);
+
+// ---------- audio: music box + pops ----------
+let AC = null, musicOn = false, musicTimer = null;
+function ensureAudio(){
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended') AC.resume();
+  }catch(e){}
+}
+function tone(f, t0, dur, type, vol){
+  type = type||'triangle'; vol = vol||0.1;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, AC.currentTime+t0);
+  g.gain.setValueAtTime(0.0001, AC.currentTime+t0);
+  g.gain.exponentialRampToValueAtTime(vol, AC.currentTime+t0+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime+t0+dur);
+  o.connect(g); g.connect(AC.destination);
+  o.start(AC.currentTime+t0); o.stop(AC.currentTime+t0+dur+0.05);
+}
+// helpers: precisely-scheduled blips
+function noiseHit(when, dur, fType, fFreq, vol){
+  try{
+    const b = AC.createBuffer(1, Math.max(1, Math.floor(AC.sampleRate*dur)), AC.sampleRate);
+    const d = b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1)*Math.pow(1-i/d.length,2);
+    const src = AC.createBufferSource(); src.buffer = b;
+    const f = AC.createBiquadFilter(); f.type = fType; f.frequency.value = fFreq;
+    const g = AC.createGain();
+    g.gain.setValueAtTime(vol, when);
+    g.gain.exponentialRampToValueAtTime(0.001, when+dur);
+    src.connect(f); f.connect(g); g.connect(AC.destination);
+    src.start(when); src.stop(when+dur+0.02);
+  }catch(e){}
+}
+function blip(when, f0, f1, dur, type, vol){
+  try{
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'triangle';
+    o.frequency.setValueAtTime(f0, when);
+    if(f1) o.frequency.exponentialRampToValueAtTime(f1, when+dur);
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(vol, when+0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(when); o.stop(when+dur+0.05);
+  }catch(e){}
+}
+// salute: bright crack + crackling shower tail (no drum thump)
+function boom(){
+  if(!AC || muted) return;
+  const t = AC.currentTime;
+  noiseHit(t, 0.28, 'lowpass', 5000, 0.5);
+  for(let i=0;i<16;i++){
+    const dt = 0.06 + Math.random()*0.65;
+    noiseHit(t+dt, 0.04, 'highpass', 3000+Math.random()*3000, 0.05+Math.random()*0.10);
+  }
+}
+// balloon: short round plop, clearly smaller than the salute
+function snap(){
+  if(!AC || muted) return;
+  const t = AC.currentTime;
+  noiseHit(t, 0.06, 'highpass', 1800, 0.35);
+  blip(t, 850, 280, 0.09, 'triangle', 0.18);
+}
+// gift chime: two rising music-box tones
+function chime(){
+  if(!AC || muted) return;
+  try{
+    tone(880, 0, 0.3, 'triangle', 0.08);
+    tone(1318, 0.12, 0.45, 'triangle', 0.08);
+  }catch(e){}
+}
+// Happy Birthday, music-box loop with lookahead scheduler
+const SONG = [[392,1],[392,1],[440,1],[392,1],[523,1],[494,2],[0,1],[392,1],[392,1],[440,1],[392,1],[587,1],[523,2],[0,1],[392,1],[392,1],[784,1],[659,1],[523,1],[494,1],[440,2],[0,1],[698,1],[698,1],[659,1],[523,1],[587,1],[523,3],[0,4]];
+const BEAT = 0.30;
+let songIdx = 0, nextNoteT = 0;
+function playSong(){
+  if(!AC || muted) return;
+  songIdx = 0;
+  nextNoteT = AC.currentTime + 0.06;
+  clearInterval(musicTimer);
+  musicTimer = setInterval(()=>{
+    if(!musicOn || muted || !AC) return;
+    while(nextNoteT < AC.currentTime + 0.5){
+      const [f, b] = SONG[songIdx % SONG.length];
+      if(f) toneAt(f, nextNoteT, Math.min(0.6, b*BEAT*1.8));
+      nextNoteT += b*BEAT;
+      songIdx++;
+    }
+  }, 200);
+}
+function toneAt(f, when, dur){
+  try{
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'triangle'; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.exponentialRampToValueAtTime(0.07, when+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, when+dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(when); o.stop(when+dur+0.05);
+  }catch(e){}
+}
+function startMusic(){
+  if(musicOn || !AC || muted) return;
+  musicOn = true; playSong();
+}
+
+// ---------- fireworks ----------
+const FCOL = ['#ff6b8a','#ffd25e','#8ecbff','#a8f0a0','#e0a0ff','#ffb36b'];
+function launch(x, shape){
+  rockets.push({x: x==null ? W*0.15+Math.random()*W*0.7 : x,
+    y: H+4, vy: -(3.0+Math.random()*0.8),
+    ty: 30+Math.random()*90,
+    color: shape==='heart' ? '#ff5d73' : FCOL[(Math.random()*FCOL.length)|0],
+    shape: shape||null});
+}
+function explode(r){
+  if(r.shape==='heart'){
+    for(let i=0;i<70;i++){
+      const t = (i/70)*Math.PI*2;
+      const hx = 16*Math.pow(Math.sin(t),3);
+      const hy = -(13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));
+      parts.push({x: r.x+hx*0.95, y: r.y+hy*0.95,
+        vx: hx*0.015, vy: hy*0.015,
+        life: 70+Math.random()*30, max: 100, color: r.color});
+    }
+    boom(); return;
+  }
+  const n = 42+((Math.random()*14)|0);
+  for(let i=0;i<n;i++){
+    const a = Math.random()*Math.PI*2, sp = 0.5+Math.random()*2.1;
+    parts.push({x: r.x, y: r.y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp,
+      life: 50+Math.random()*30, max: 80, color: r.color});
+  }
+  boom();
+}
+
+// ---------- candles ----------
+function cakeTopY(){ return TABLE_TOP - 5 - 14 - 12 - 11; }
+function cakeBox(){
+  return {x0: TABLE_X-40, x1: TABLE_X+40, y0: cakeTopY()-22, y1: TABLE_TOP+10};
+}
+function blowOut(){
+  lit.forEach((v,i)=>{ if(v) setTimeout(()=>{ lit[i]=false; smokes.push({x: candleX(i), y: candleTopY(), life: 1}); }, i*160); });
+  // праздничный залп в честь желания — последний расцветает сердцем
+  setTimeout(()=>{ launch(); setTimeout(launch, 250); setTimeout(()=>launch(W/2,'heart'), 500); }, 700);
+  hintEl.textContent = 'загадай желание ✨';
+}
+function relight(){
+  lit.forEach((v,i)=>{ if(!v) setTimeout(()=>{ lit[i]=true; }, i*140); });
+  hintEl.textContent = DEFAUTHINT;
+}
+function confetti(x, y, n){
+  const cols = ['#ff6b8a','#ffd25e','#8ecbff','#a8f0a0','#e0a0ff','#ffb36b'];
+  for(let i=0;i<(n||24);i++){
+    parts.push({x, y, vx: (Math.random()-.5)*3, vy: -1-Math.random()*2,
+      life: 60+Math.random()*50, max: 110, color: cols[(Math.random()*cols.length)|0]});
+  }
+}
+function popBalloon(b){
+  b.alive = false; b.t = 3;
+  confetti(b.x, b.y+5*b.s, 20); snap();
+}
+function openGift(i, gg){
+  if(!giftsOpened[i]){
+    giftsOpened[i] = true;
+    confetti(gg.x+gg.w/2, gg.y-4, 30); chime();
+  }
+  noteText.textContent = GIFTS[i].wish;
+  noteEl.hidden = false;
+}
+function candleX(i){ return TABLE_X + (i-1)*10; }
+function candleTopY(){ return cakeTopY() - 8; }
+function giftRowX(){
+  const total = GIFTS.reduce((a,g)=>a+g.w,0) + GGAP*(GIFTS.length-1);
+  return Math.min(Math.max(TABLE_X-total/2, 4), Math.max(4, W-4-total));
+}
+function giftGeom(i){
+  let x = giftRowX();
+  for(let k=0;k<i;k++) x += GIFTS[k].w + GGAP;
+  const d = GIFTS[i];
+  return {x: Math.round(x), y: GROUND_Y-d.h, w:d.w, h:d.h, box:d.box, rib:d.rib};
+}
+// ---------- springy garland: tap to pluck, drag to pull ----------
+const gBase = x => 3 + 9*Math.sin(Math.PI*x/W);
+function gDisp(x){
+  if(!garland) return 0;
+  const dx = (x-garland.x)/30;
+  return garland.d*Math.exp(-dx*dx);
+}
+const gY = x => gBase(x) + gDisp(x);
+function garlandStep(dt){
+  if(garland && !garland.held){
+    const s = Math.min(0.05, dt/1000);
+    garland.v += (-140*garland.d - 5.5*garland.v)*s;
+    garland.d += garland.v*s;
+    if(Math.abs(garland.d)<0.08 && Math.abs(garland.v)<0.6) garland = null;
+  }
+}
+function garlandHit(gx, gy){
+  if(gy > 28) return false;
+  return Math.abs(gy - gY(gx)) < 10;
+}
+function garlandSound(pull){
+  if(!AC || muted) return;
+  try{ blip(AC.currentTime, 200+Math.min(30,pull)*10, 130, 0.16, 'triangle', 0.06); }catch(e){}
+}
+
+function put(x, y, c){ ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), 1, 1); }
+
+function toGame(e){
+  const r = cv.getBoundingClientRect();
+  return {x: (e.clientX-r.left)/r.width*W, y: (e.clientY-r.top)/r.height*H};
+}
+cv.addEventListener('pointerdown', e=>{
+  ensureAudio();
+  const g = toGame(e);
+  if(garlandHit(g.x, g.y)){
+    garland = {x: Math.max(4, Math.min(W-4, g.x)), d: 0, v: 0, held: true};
+    return;
+  }
+  for(const bl of balloons){
+    if(bl.alive && Math.hypot(g.x-bl.x, g.y-bl.y-5*bl.s)<11){ popBalloon(bl); return; }
+  }
+  for(let i=0;i<GIFTS.length;i++){
+    const gg = giftGeom(i);
+    if(g.x>=gg.x-3 && g.x<=gg.x+gg.w+3 && g.y>=gg.y-11 && g.y<=GROUND_Y){
+      openGift(i, gg); return;
+    }
+  }
+  const cb = cakeBox();
+  if(g.x>=cb.x0 && g.x<=cb.x1 && g.y>=cb.y0 && g.y<=cb.y1){
+    if(lit.some(v=>v)) blowOut(); else relight();
+  } else {
+    launch(g.x);
+  }
+});
+cv.addEventListener('pointermove', e=>{
+  if(garland && garland.held){
+    const g = toGame(e);
+    garland.x = Math.max(4, Math.min(W-4, g.x));
+    garland.d = Math.max(-8, Math.min(34, g.y - gBase(garland.x)));
+  }
+});
+function releaseGarland(){
+  if(garland && garland.held){
+    garland.held = false;
+    const pull = Math.abs(garland.d);
+    garlandSound(pull);
+    if(pull<3){ garland.d = 10; garland.v = 0; }
+  }
+}
+cv.addEventListener('pointerup', releaseGarland);
+cv.addEventListener('pointercancel', ()=>{ if(garland) garland.held = false; });
+
+// ---------- drawing ----------
+// ---------- cake: chocolate bottom, pink middle, cream top ----------
+function drawCake(){
+  const tx = Math.round(TABLE_X);
+  const OL = '#3a2210';
+  // shadow the plate casts on the table top
+  ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(tx-36, TABLE_TOP, 72, 2);
+  // plate — sits fully ON the table, narrower than the table top
+  ctx.fillStyle = '#8d9cb8'; ctx.fillRect(tx-35, TABLE_TOP-5, 70, 5);
+  ctx.fillStyle = '#dfe7f5'; ctx.fillRect(tx-35, TABLE_TOP-5, 70, 2);
+  // tiers bottom-up
+  const tiers = [
+    {w:64,h:14,base:'#6b4226',dark:'#40260f',top:'#fff3d6'},
+    {w:48,h:12,base:'#f28ba8',dark:'#c96a86',top:'#ffd9e4'},
+    {w:32,h:11,base:'#f7e3b0',dark:'#d9b06a',top:'#fff3d6'},
+  ];
+  let y = TABLE_TOP-5;
+  for(const t of tiers){
+    const x = Math.round(tx - t.w/2);
+    ctx.fillStyle = OL; ctx.fillRect(x-1, y-t.h, t.w+2, t.h);
+    ctx.fillStyle = t.base; ctx.fillRect(x, y-t.h+1, t.w, t.h-1);
+    ctx.fillStyle = t.dark; ctx.fillRect(x+t.w-4, y-t.h+1, 3, t.h-1);
+    ctx.fillStyle = '#ffffff55'; ctx.fillRect(x+1, y-t.h+1, 2, t.h-1);
+    // frosting cap with drips
+    ctx.fillStyle = t.top; ctx.fillRect(x, y-t.h+1, t.w, 3);
+    for(let dx=4; dx<t.w-3; dx+=7){
+      const dl = 2 + ((dx*5+t.w)%3);
+      ctx.fillStyle = t.top; ctx.fillRect(x+dx, y-t.h+3, 2, dl);
+    }
+    y -= t.h;
+  }
+  // sprinkles on the bottom frosting
+  const sy = TABLE_TOP-5-14+2;
+  const SPR = [[-28,'#e63956'],[-19,'#7ec8f0'],[-9,'#8fd14f'],[3,'#ffd25e'],[13,'#e63956'],[23,'#7ec8f0']];
+  for(const [dx,c] of SPR) put(tx+dx, sy, c);
+  // berries: a row along every tier's wall + cherries on top
+  function berry(bx, by){
+    ctx.fillStyle = '#e63956'; ctx.fillRect(bx-1, by-2, 3, 3);
+    ctx.fillStyle = '#ff8ba0'; ctx.fillRect(bx-1, by-2, 1, 1);
+    ctx.fillStyle = '#3fa33c'; ctx.fillRect(bx, by-3, 1, 1);
+  }
+  const bTop = TABLE_TOP-5-14, mTop = bTop-12;
+  // seam rows: berries strung across the full width, tucked into the seam
+  for(const dx of [-27,-18,-9,0,9,18,27]) berry(tx+dx, bTop);
+  for(const dx of [-21,-14,-7,0,7,14,21]) berry(tx+dx, mTop);
+  for(const dx of [-5, 5]){
+    ctx.fillStyle = '#e63956'; ctx.fillRect(tx+dx-1, y-2, 3, 2);
+    ctx.fillStyle = '#ff8ba0'; ctx.fillRect(tx+dx-1, y-2, 1, 1);
+    ctx.fillStyle = '#3fa33c'; ctx.fillRect(tx+dx, y-3, 1, 1);
+  }
+  return y; // cake top
+}
+function frame(dt){
+  time += dt;
+  // --- warm sunset sky ---
+  const g = ctx.createLinearGradient(0,0,0,GROUND_Y);
+  g.addColorStop(0,'#2a2358'); g.addColorStop(.42,'#6b2f6e');
+  g.addColorStop(.66,'#d1616a'); g.addColorStop(.85,'#f08a4b'); g.addColorStop(1,'#f7b267');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,GROUND_Y+1);
+  // early stars, upper sky only
+  for(const s of stars){
+    if(s.y>85) continue;
+    const tw = .35 + .65*Math.abs(Math.sin(time*.0012 + s.p));
+    ctx.fillStyle = tw>.8 ? '#ffffff' : '#ffd9ec';
+    ctx.globalAlpha = .25 + .75*tw;
+    ctx.fillRect(s.x|0, s.y|0, s.s, s.s);
+  }
+  ctx.globalAlpha = 1;
+  // low sun + glow
+  const sx = W-30, sy = GROUND_Y-52;
+  const sg = ctx.createRadialGradient(sx,sy,2, sx,sy,30);
+  sg.addColorStop(0,'rgba(255,220,140,0.55)'); sg.addColorStop(1,'rgba(255,220,140,0)');
+  ctx.fillStyle = sg; ctx.fillRect(sx-30,sy-30,60,60);
+  ctx.fillStyle = '#ffe9a8';
+  ctx.beginPath(); ctx.arc(sx,sy,8,0,7); ctx.fill();
+  ctx.fillStyle = '#f7b267';
+  ctx.fillRect(sx-8,sy+3,16,1); ctx.fillRect(sx-5,sy+5,10,1);
+  // pink pixel clouds, drifting slowly
+  function cloud(cx0, cy0, s){
+    const cx = Math.round(cx0 + Math.sin(time*.00021 + cy0)*3), cy = Math.round(cy0);
+    ctx.fillStyle = '#b45a78';
+    ctx.beginPath(); ctx.ellipse(cx,cy+1,11*s,4*s,0,0,7); ctx.fill();
+    ctx.fillStyle = '#e890a8';
+    ctx.beginPath(); ctx.ellipse(cx,cy,11*s,4*s,0,0,7); ctx.fill();
+    ctx.fillStyle = '#ffd9c0';
+    ctx.beginPath(); ctx.ellipse(cx-1,cy-1,8*s,2.6*s,0,0,7); ctx.fill();
+  }
+  cloud(W*0.24, 58, 1); cloud(W*0.68, 86, .8); cloud(W*0.45, 108, .65);
+  // distant birds
+  ctx.fillStyle = '#3a204a';
+  for(const b of birds){
+    b.x += b.sp; if(b.x > W+6){ b.x = -6; b.y = 46+Math.random()*36; }
+    const bx = Math.round(b.x), by = Math.round(b.y + Math.sin(time*.002+b.p)*1.5);
+    ctx.fillRect(bx-2,by,2,1); ctx.fillRect(bx+1,by,2,1); ctx.fillRect(bx,by+1,1,1);
+  }
+  // festive pennant garland across the top (springy — pull it!)
+  garlandStep(dt);
+  ctx.fillStyle = '#2a1a3a';
+  for(let x=0;x<=W;x+=2) ctx.fillRect(x, Math.round(gY(x)), 2, 1);
+  const PCOL = ['#ff6b8a','#ffd25e','#8ecbff','#a8f0a0'];
+  let pi = 0;
+  const swing = garland ? Math.max(-2, Math.min(2, garland.v*0.03)) : 0;
+  for(let x=7;x<W-4;x+=13){
+    const wy = gY(x);
+    const tipX = Math.sin(time*.0022 + x*.5)*0.6 + swing;
+    ctx.fillStyle = PCOL[(pi++)%PCOL.length];
+    ctx.beginPath(); ctx.moveTo(x-3,wy+1); ctx.lineTo(x+3,wy+1); ctx.lineTo(x+tipX,wy+7); ctx.fill();
+  }
+  // balloons at the sides, bobbing (tap to pop!)
+  const BCOL = [['#c9184a','#ff5d73'],['#d9a441','#ffd25e'],['#2f6db3','#6bb8ff']];
+  for(const b of balloons){
+    if(!b.alive){
+      b.t -= dt/1000; if(b.t<=0) b.alive = true;
+      continue;
+    }
+    const bc = BCOL[b.c], s = b.s;
+    const x = Math.round(W*b.fx + Math.sin(time*.0016 + W*b.fx)*2);
+    const y = Math.round(b.fy + Math.cos(time*.0013 + b.fy)*2);
+    b.x = x; b.y = y;
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.fillRect(x, y+8*s, 1, 13*s);
+    ctx.fillStyle = bc[0];
+    ctx.beginPath(); ctx.ellipse(x, y+5*s, 6*s, 8*s, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = bc[1];
+    ctx.beginPath(); ctx.ellipse(x-1, y+4*s, 5*s, 7*s, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#ffffffaa'; ctx.fillRect(x-3*s, y+1*s, 2, 3);
+    ctx.fillStyle = bc[0]; ctx.fillRect(x-1, y+8*s, 2, 2);
+  }
+  // violet hill silhouettes
+  ctx.fillStyle = '#4a2a5e';
+  ctx.beginPath(); ctx.moveTo(0,168);
+  for(let x=0;x<=W;x+=4) ctx.lineTo(x, 158 + Math.sin(x*.08)*7 + Math.sin(x*.023+2)*8);
+  ctx.lineTo(W,GROUND_Y+1); ctx.lineTo(0,GROUND_Y+1); ctx.fill();
+  const hg = ctx.createLinearGradient(0,150,0,GROUND_Y+1);
+  hg.addColorStop(0,'#3d2a5e'); hg.addColorStop(1,'#221839');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.moveTo(0,178);
+  for(let x=0;x<=W;x+=4) ctx.lineTo(x, 170 + Math.sin(x*.06+1)*6);
+  ctx.lineTo(W,GROUND_Y+1); ctx.lineTo(0,GROUND_Y+1); ctx.fill();
+  // warm sparks rising from the terrace
+  for(const f of fireflies){
+    f.x += Math.sin(time*.0006+f.p)*.12*f.sp; f.y += Math.cos(time*.0005+f.p)*.1;
+    const b = (Math.sin(time*.004*f.sp+f.p)+1)/2;
+    if(b>.55) put(f.x, f.y, '#ffe9a8');
+    if(b>.82){ const fx0=Math.round(f.x), fy0=Math.round(f.y); put(fx0-1,fy0,'#ffb36b'); put(fx0+1,fy0,'#ffb36b'); put(fx0,fy0-1,'#ffb36b'); put(fx0,fy0+1,'#ffb36b'); }
+  }
+  // wooden terrace floor
+  ctx.fillStyle = '#6e4a2c'; ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+  // soft shadow the hills cast onto the deck — grounds them
+  const ds = ctx.createLinearGradient(0,GROUND_Y,0,GROUND_Y+10);
+  ds.addColorStop(0,'rgba(10,5,20,0.35)'); ds.addColorStop(1,'rgba(10,5,20,0)');
+  ctx.fillStyle = ds; ctx.fillRect(0,GROUND_Y,W,10);
+  ctx.fillStyle = '#5a3a22';
+  for(let y=GROUND_Y+5;y<H;y+=5) ctx.fillRect(0,y,W,1);
+  ctx.fillStyle = '#4e3120';
+  for(let i=0;i<46;i++){
+    const x = (i*53)%W, y = GROUND_Y+1+((i*29)%(H-GROUND_Y-1));
+    ctx.fillRect(x,y,1,4);
+  }
+  ctx.fillStyle = '#a06a3c'; ctx.fillRect(0,GROUND_Y,W,1);
+
+  // table
+  // table with wood grain
+  const tx = Math.round(TABLE_X);
+  ctx.fillStyle = '#5a3a22'; ctx.fillRect(tx-46, TABLE_TOP, 92, 6);
+  ctx.fillStyle = '#8a5c34'; ctx.fillRect(tx-46, TABLE_TOP, 92, 2);
+  ctx.fillStyle = '#4a2e18';
+  ctx.fillRect(tx-46, TABLE_TOP+3, 92, 1);
+  ctx.fillRect(tx-38, TABLE_TOP+6, 5, GROUND_Y-TABLE_TOP-6);
+  ctx.fillRect(tx+33, TABLE_TOP+6, 5, GROUND_Y-TABLE_TOP-6);
+  ctx.fillStyle = '#6b4a2c';
+  ctx.fillRect(tx-38, TABLE_TOP+6, 2, GROUND_Y-TABLE_TOP-6);
+  ctx.fillRect(tx+33, TABLE_TOP+6, 2, GROUND_Y-TABLE_TOP-6);
+  // gifts on the floor beside the table (tap to open!)
+  function drawGift(i){
+    const gg = giftGeom(i), x = gg.x, y = gg.y, w = gg.w, h = gg.h;
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fillRect(x-1, GROUND_Y-1, w+2, 1);
+    ctx.fillStyle = '#3a2210'; ctx.fillRect(x-1, y-5, w+2, h+5);
+    ctx.fillStyle = gg.box; ctx.fillRect(x, y-4, w, h+4);
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fillRect(x, y-4, w, 1);
+    ctx.fillStyle = gg.rib;
+    ctx.fillRect(x+((w/2)|0)-1, y-4, 2, h+4);
+    ctx.fillRect(x, y+((h/2)|0), w, 2);
+    if(!giftsOpened[i]){
+      ctx.fillRect(x+((w/2)|0)-3, y-6, 2, 2);
+      ctx.fillRect(x+((w/2)|0)+1, y-6, 2, 2);
+    } else {
+      // open box: dark inside, lid set aside on the floor, sparkles rising
+      ctx.fillStyle = '#2a1508'; ctx.fillRect(x, y-4, w, 2);
+      const lx = Math.max(1, x-10);
+      ctx.fillStyle = gg.rib; ctx.fillRect(lx, GROUND_Y-3, w+6, 3);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(lx, GROUND_Y-3, w+6, 1);
+      const tw = (time/350)|0;
+      ctx.fillStyle = (tw%2) ? '#ffffff' : '#ffd25e';
+      ctx.fillRect(x+((w/2)|0)-4, y-13+(tw%3), 1, 1);
+      ctx.fillStyle = (tw%2) ? '#ffd25e' : '#ffffff';
+      ctx.fillRect(x+((w/2)|0)+4, y-11-(tw%2), 1, 1);
+    }
+  }
+  for(let i=0;i<GIFTS.length;i++) drawGift(i);
+  // cake
+  const cakeTop = drawCake();
+  // warm light spilling from the candles
+  if(lit.some(v=>v)){
+    const gl = ctx.createRadialGradient(tx,cakeTop-8,4, tx,cakeTop-8,44);
+    gl.addColorStop(0,'rgba(255,190,90,0.22)');
+    gl.addColorStop(1,'rgba(255,190,90,0)');
+    ctx.fillStyle = gl; ctx.fillRect(tx-44,cakeTop-52,88,88);
+  }
+  // fountain candles: gray sticks standing ON the cake, bright heads + sparks
+  for(let i=0;i<3;i++){
+    const cx0 = candleX(i), ctop = candleTopY();
+    const sx = Math.round(cx0)-1, stop = ctop+2;
+    for(let yy=0; yy<6; yy++){
+      ctx.fillStyle = yy%2 ? '#ffd25e' : '#c9942e';
+      ctx.fillRect(sx, stop+yy, 2, 1);
+    }
+    ctx.fillStyle = '#3a2210'; ctx.fillRect(sx, stop+6, 2, 1);
+    if(lit[i]){
+      ctx.fillStyle = '#ffd25e33';
+      ctx.beginPath(); ctx.arc(cx0-0.5, stop-1, 7, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fff6c0'; ctx.fillRect(sx, stop-3, 2, 3);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(sx, stop-3, 2, 1);
+      for(let k=0;k<2;k++){
+        const a = Math.random()*Math.PI*2, sp = 0.3+Math.random()*1.4;
+        parts.push({x: cx0-0.5, y: ctop, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp-0.6,
+          life: 14+Math.random()*16, max: 30, color: ['#ffffff','#ffd25e','#ffb36b'][(Math.random()*3)|0]});
+      }
+    }
+  }
+  // smoke
+  for(let i=smokes.length-1;i>=0;i--){
+    const s = smokes[i];
+    s.y -= 0.3; s.life -= 0.02;
+    if(s.life<=0){ smokes.splice(i,1); continue; }
+    ctx.globalAlpha = s.life*0.6; put(s.x, s.y, '#bbbbcc'); ctx.globalAlpha = 1;
+  }
+
+  // rockets
+  for(let i=rockets.length-1;i>=0;i--){
+    const r = rockets[i];
+    r.y += r.vy;
+    put(r.x, r.y, '#ffffff'); put(r.x, r.y+1, r.color); put(r.x, r.y+2, r.color);
+    if(r.y <= r.ty){ explode(r); rockets.splice(i,1); }
+  }
+  // particles
+  for(let i=parts.length-1;i>=0;i--){
+    const p = parts[i];
+    p.x += p.vx; p.y += p.vy; p.vy += 0.02; p.vx *= 0.99; p.life--;
+    if(p.life<=0 || p.y>H){ parts.splice(i,1); continue; }
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.life/40));
+    put(p.x, p.y, p.color);
+    ctx.globalAlpha = 1;
+  }
+  // auto show
+  autoT -= dt/1000;
+  if(autoT<=0 && rockets.length<2){ launch(); autoT = 3.5+Math.random()*2.5; }
+
+  // grain + vignette
+  for(let i=0;i<90;i++){
+    ctx.globalAlpha = 0.05;
+    ctx.fillStyle = Math.random()<0.5 ? '#ffffff' : '#000000';
+    ctx.fillRect((Math.random()*W)|0, (Math.random()*H)|0, 1, 1);
+  }
+  ctx.globalAlpha = 1;
+  const vg = ctx.createRadialGradient(W/2,H*0.45,Math.min(W,H)*0.35, W/2,H*0.45,Math.max(W,H)*0.75);
+  vg.addColorStop(0,'rgba(30,8,18,0)');
+  vg.addColorStop(1,'rgba(30,8,18,0.38)');
+  ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+}
+
+let last = performance.now();
+function loop(now){
+  const dt = Math.min(50, now-last); last = now;
+  frame(dt);
+  requestAnimationFrame(loop);
+}
+fit();
+reset();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
