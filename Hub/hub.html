@@ -42,17 +42,28 @@ h1{font-family:"Press Start 2P",monospace;font-size:19px;line-height:1.6;text-al
 <script>
 const OWNER = "v2178335-cmd", REPO = "Happy_Birthday";
 const BASE = "https://" + OWNER + ".github.io/" + REPO + "/";
-// Описанные проекты. Чтобы оформить новый проект: добавь сюда папку —
-// плашка NEW с неё снимется сама. Чтобы вернуть NEW старому — добавь isNew:true.
+// Плашка NEW: N дней с даты added; isNew:true — висеть всегда; isNew:false — снять досрочно.
+// У папок без описания в KNOWN плашка висит всегда, пока не добавишь описание (датировать их нечем).
+const NEW_DAYS = 30;
+function hasBadge(name, meta){
+  if(!meta) return true;
+  if(meta.isNew === true) return true;
+  if(meta.isNew === false) return false;
+  if(meta.added){
+    const t = Date.parse(meta.added);
+    if(!isNaN(t)) return (Date.now() - t) < NEW_DAYS * 864e5;
+  }
+  return false;
+}
 const KNOWN = {
-  Happy_6: {e:"🎂", t:"ТОРТ ДЛЯ БРАТА", d:"фонтаны, салют, 4 подарка, шарики, гирлянда и музыка-шкатулка", entry:"Happy_6/birthday", name:true, isNew:true},
+  Happy_6: {e:"🎂", t:"ТОРТ ДЛЯ БРАТА", d:"фонтаны, салют, 4 подарка, шарики, гирлянда и музыка-шкатулка", entry:"Happy_6/birthday", name:true, added:"2026-11-11"},
   Happy_2: {e:"🌌", t:"ВЫБОР ВСЕЛЕННОЙ", d:"4 темы: киберпанк, RDR 2, ведьмак и Resident Evil", entry:"Happy_2/"},
   Happy_5: {e:"🚗", t:"ВАЗ-2107 В ПОДАРОК", d:"интерактивный 3D-гараж: двери, капот, двигатель, фары", entry:"Happy_5/"},
   Happy_3: {e:"🥠", t:"ПЕЧЕНЬКИ С ПРЕДСКАЗАНИЯМИ", d:"17 печенек — открывай и читай пожелания", entry:"Happy_3/20260424_dba17d.html"},
   Happy_4: {e:"💻", t:"ТЕРМИНАЛ", d:"секретный доступ к поздравлению по дате рождения", entry:"Happy_4/Happy_terminal.html"},
   Happy:   {e:"📖", t:"КНИЖКА ДЛЯ D", d:"трогательная история на 6 страниц", entry:"Happy/20260710.html"},
   Happy_1: {e:"✨", t:"КЛАССИКА С КОНФЕТТИ", d:"простое и яркое «С Днём Рождения!»", entry:"Happy_1/Happy.html"},
-  Happy_7: {e:"🌙", t:"ЗВЁЗДНАЯ НОЧЬ", d:"мерцающие звёзды, вспышки и пожелания от луны", entry:"Happy_7/happy7.html", name:true, isNew:true},
+  Happy_7: {e:"🌙", t:"ЗВЁЗДНАЯ НОЧЬ", d:"мерцающие звёзды, вспышки и пожелания от луны", entry:"Happy_7/happy7.html", name:false, added:"2026-11-12"},
 };
 const ORDER = ["Happy_7","Happy_6","Happy_2","Happy_5","Happy_3","Happy_4","Happy","Happy_1"];
 const box = document.getElementById('cards');
@@ -90,12 +101,12 @@ async function probeSeries(){
   return found;
 }
 
-function cardEl(meta, url){
+function cardEl(meta, url, badge){
   const a = document.createElement('a');
   a.className = 'card';
   a.href = url;
   a.innerHTML = '<div class="emoji">'+meta.e+'</div><div><div class="ttl">'+meta.t+'</div><div class="dsc">'+meta.d+'</div></div><div class="arrow">›</div>'
-    + (meta.isNew ? '<div class="badge">NEW ★</div>' : '');
+    + (badge ? '<div class="badge">NEW ★</div>' : '');
   return a;
 }
 
@@ -108,8 +119,8 @@ async function buildHub(dirs, extra){
   for(const d of fresh){
     const entry = (extra && extra[d]) || await findEntry(d);
     box.appendChild(cardEl(
-      {e:"🎁", t:pretty(d), d:"новая работа — загляни!", isNew:true},
-      BASE + entry
+      {e:"🎁", t:pretty(d), d:"новая работа — загляни!"},
+      BASE + entry, true
     ));
   }
   const ordered = ORDER.filter(o=>known.includes(o)).concat(known.filter(k=>!ORDER.includes(k)));
@@ -117,7 +128,7 @@ async function buildHub(dirs, extra){
     const m = KNOWN[d];
     let url = BASE + m.entry;
     if(m.name && nm) url += "?name=" + encodeURIComponent(nm);
-    box.appendChild(cardEl(m, url));
+    box.appendChild(cardEl(m, url, hasBadge(d, m)));
   }
 }
 
