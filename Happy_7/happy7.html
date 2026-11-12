@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Звёздная ночь ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#070b1d}
+#frame{position:fixed;inset:0}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+#title{position:absolute;top:7%;left:0;right:0;text-align:center;pointer-events:none;padding:0 12px}
+#greet{font-family:"Press Start 2P",monospace;font-size:22px;line-height:1.5;color:#ffe9a8;text-shadow:2px 0 0 #4a2c6b,0 2px 0 #4a2c6b,-2px 0 0 #4a2c6b,0 -2px 0 #4a2c6b,2px 2px 0 #4a2c6b}
+#hint{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:20px;font-family:"Caveat",cursive;font-weight:500;color:#cfe4ff;opacity:.9;pointer-events:none;text-shadow:0 2px 0 #000}
+#note{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(7,10,28,.55);padding:16px}
+#note[hidden]{display:none}
+#noteCard{max-width:min(86vw,340px);background:#fff6e8;color:#2c2350;font-family:"Caveat",cursive;font-size:23px;font-weight:500;line-height:1.45;padding:16px 16px 12px;border:3px solid #4a2c6b;box-shadow:0 0 0 3px #ffe9a8,0 8px 30px #000;text-align:center}
+#noteClose{margin-top:10px;font-family:"Caveat",cursive;font-size:20px;font-weight:700;padding:4px 20px;border:0;border-radius:20px;background:#4a2c6b;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="frame">
+  <canvas id="cv"></canvas>
+  <div id="title"><div id="greet">С ДНЁМ<br>РОЖДЕНИЯ!</div></div>
+  <div id="hint">тап — зажечь звезду ✨ • луна — пожелание 🌙</div>
+  <div id="note" hidden><div id="noteCard"><div id="noteText"></div><button id="noteClose">спасибо ✖</button></div></div>
+</div>
+<script>
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const note = document.getElementById('note'), noteText = document.getElementById('noteText');
+const params = new URLSearchParams(location.search);
+const who = (params.get('name') || '').trim().slice(0,12);
+if(who) document.getElementById('greet').innerHTML = 'С ДНЁМ<br>РОЖДЕНИЯ,<br>' + who.toUpperCase() + '!';
+const WISHES = [
+  "Пусть каждая твоя мечта находит свою звезду 🌟",
+  "Желаю ночей без тревог и дней, полных света ☀️",
+  "Пусть удача подмигивает тебе так же часто, как звёзды ✨",
+  "Сияй — у тебя это отлично получается 💫",
+  "Пусть всё задуманное сбывается быстрее падающей звезды 🌠"
+];
+// ---------- звук ----------
+let AC = null, muted = false;
+function ensureAudio(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(AC && AC.state==='suspended') AC.resume(); }
+function tone(f, t, dur, type, vol){
+  if(!AC || muted) return;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type || 'sine'; o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol || .2, t + .02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + .05);
+}
+function chime(){ ensureAudio(); if(!AC) return; const t = AC.currentTime; tone(880,t,.35,'sine',.18); tone(1318,t+.12,.4,'sine',.14); }
+function pop(){ ensureAudio(); if(!AC) return; const t = AC.currentTime; tone(520,t,.12,'triangle',.22); tone(780,t+.06,.15,'triangle',.18); }
+// ---------- сцена ----------
+let W = 0, H = 0, DPR = 1;
+let stars = [], bursts = [], moon = {x:0, y:0, r:30, glow:0};
+function resize(){
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  moon.x = W * .78; moon.y = H * .2; moon.r = Math.min(W,H) * .075 + 14;
+  stars = [];
+  const n = Math.floor(W * H / 4500);
+  for(let i=0;i<n;i++) stars.push({x:Math.random()*W, y:Math.random()*H, r:Math.random()*1.4+.4, p:Math.random()*6.28, s:.5+Math.random()*1.5});
+}
+addEventListener('resize', resize); resize();
+function burst(x, y, big){
+  const cols = ['#ffe9a8','#ffb3d9','#a8e6ff','#d9c2ff','#fff'];
+  const n = big ? 26 : 14;
+  for(let i=0;i<n;i++){
+    const a = Math.random()*6.28, sp = (big?2.4:1.6) * (0.4+Math.random());
+    bursts.push({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, c:cols[i%cols.length]});
+  }
+}
+let flash = 0;
+cv.addEventListener('pointerdown', e=>{
+  ensureAudio();
+  const x = e.clientX, y = e.clientY;
+  if(note.hidden === false) return;
+  const dm = Math.hypot(x-moon.x, y-moon.y);
+  if(dm < moon.r + 14){
+    moon.glow = 1; chime(); flash = .5;
+    noteText.textContent = (who ? who + ", " : "") + WISHES[Math.floor(Math.random()*WISHES.length)];
+    note.hidden = false;
+    burst(moon.x, moon.y, true);
+  } else {
+    pop(); burst(x, y, false);
+  }
+});
+document.getElementById('noteClose').addEventListener('click', ()=>{ note.hidden = true; });
+let last = performance.now();
+function frame(now){
+  const dt = Math.min((now-last)/1000, .05); last = now;
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#070b1d'); g.addColorStop(.6,'#101a3f'); g.addColorStop(1,'#1d1440');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  const t = now/1000;
+  for(const s of stars){
+    const tw = .45 + .55*Math.abs(Math.sin(t*s.s + s.p));
+    ctx.globalAlpha = tw;
+    ctx.fillStyle = '#dfeaff';
+    ctx.fillRect(s.x, s.y, s.r, s.r);
+  }
+  ctx.globalAlpha = 1;
+  // луна
+  moon.glow = Math.max(0, moon.glow - dt*1.2);
+  const mg = ctx.createRadialGradient(moon.x,moon.y,moon.r*.3, moon.x,moon.y,moon.r*2.6);
+  mg.addColorStop(0,'rgba(255,240,200,'+(.28+moon.glow*.5)+')'); mg.addColorStop(1,'rgba(255,240,200,0)');
+  ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(moon.x,moon.y,moon.r*2.6,0,6.29); ctx.fill();
+  ctx.fillStyle = '#ffedb8';
+  ctx.beginPath(); ctx.arc(moon.x,moon.y,moon.r,0,6.29); ctx.fill();
+  ctx.fillStyle = 'rgba(210,180,120,.55)';
+  ctx.beginPath(); ctx.arc(moon.x-moon.r*.3,moon.y-moon.r*.2,moon.r*.18,0,6.29); ctx.fill();
+  ctx.beginPath(); ctx.arc(moon.x+moon.r*.25,moon.y+moon.r*.3,moon.r*.13,0,6.29); ctx.fill();
+  ctx.beginPath(); ctx.arc(moon.x+moon.r*.1,moon.y-moon.r*.45,moon.r*.1,0,6.29); ctx.fill();
+  // вспышки
+  for(let i=bursts.length-1;i>=0;i--){
+    const p = bursts[i];
+    p.x += p.vx; p.y += p.vy; p.vx *= .985; p.vy *= .985; p.life -= dt*1.4;
+    if(p.life<=0){ bursts.splice(i,1); continue; }
+    ctx.globalAlpha = Math.max(p.life,0);
+    ctx.fillStyle = p.c;
+    ctx.fillRect(p.x-1.5, p.y-1.5, 3, 3);
+  }
+  ctx.globalAlpha = 1;
+  if(flash > 0){ ctx.fillStyle = 'rgba(255,240,200,'+(flash*.35)+')'; ctx.fillRect(0,0,W,H); flash -= dt; }
+  // падающая звезда иногда
+  if(Math.random() < dt*.25){
+    const sx = Math.random()*W*.8, sy = Math.random()*H*.3;
+    for(let i=0;i<10;i++) bursts.push({x:sx-i*4, y:sy+i*2, vx:-3, vy:1.5, life:.8-i*.06, c:'#fff'});
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
